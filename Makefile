@@ -90,7 +90,7 @@ TARGETLIBS:=
 
 ifeq (,$(TARGET))
 TARGET:=qe
-TARGETS:=kmaps ligatures tqe
+TARGETS:=kmaps ligatures tqe xq
 TOP:=1
 else
 TOP:=0
@@ -257,6 +257,9 @@ all: $(TARGETLIBS) $(TARGET)$(DEBUG_SUFFIX)$(EXE) $(TARGETS)
 else
 all: $(TARGETLIBS) $(TARGET)$(DEBUG_SUFFIX)$(EXE)
 endif
+
+xq: $(TARGET)
+	cp $^ $@
 
 libqhtml: force
 	$(MAKE) -C libqhtml all
@@ -550,15 +553,16 @@ install: $(TARGETS) qe.1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/qe
 ifdef CONFIG_X11
-	$(INSTALL) -m 755 -s xqe$(EXE) $(DESTDIR)$(prefix)/bin/qemacs$(EXE)
+	$(INSTALL) -m 755 -s xqe$(EXE) $(DESTDIR)$(prefix)/bin/qemacs-hx$(EXE)
 else
   ifdef CONFIG_TINY
-	$(INSTALL) -m 755 -s tqe$(EXE) $(DESTDIR)$(prefix)/bin/qemacs$(EXE)
+	$(INSTALL) -m 755 -s tqe$(EXE) $(DESTDIR)$(prefix)/bin/qemacs-hx$(EXE)
   else
-	$(INSTALL) -m 755 -s qe$(EXE) $(DESTDIR)$(prefix)/bin/qemacs$(EXE)
+	$(INSTALL) -m 755 -s qe$(EXE) $(DESTDIR)$(prefix)/bin/qemacs-hx$(EXE)
   endif
 endif
-	ln -sf qemacs$(EXE) $(DESTDIR)$(prefix)/bin/qe$(EXE)
+	ln -sf qemacs-hx$(EXE) $(DESTDIR)$(prefix)/bin/qe$(EXE)
+	ln -sf qemacs-hx$(EXE) $(DESTDIR)$(prefix)/bin/xq$(EXE)
 ifdef CONFIG_FFMPEG
 	ln -sf qemacs$(EXE) $(DESTDIR)$(prefix)/bin/ffplay$(EXE)
 endif
@@ -571,6 +575,7 @@ endif
 uninstall:
 	rm -f $(DESTDIR)$(prefix)/bin/qemacs$(EXE)   \
 	      $(DESTDIR)$(prefix)/bin/qe$(EXE)       \
+	      $(DESTDIR)$(prefix)/bin/xq$(EXE)       \
 	      $(DESTDIR)$(prefix)/bin/tqe$(EXE)      \
 	      $(DESTDIR)$(prefix)/bin/xqe$(EXE)      \
 	      $(DESTDIR)$(prefix)/bin/ffplay$(EXE)   \
