@@ -399,19 +399,20 @@ endif
 #
 # Key maps build (Only useful if you want to build your own maps from yudit maps)
 #
-KMAPS=Arabic.kmap ArmenianEast.kmap ArmenianWest.kmap Chinese-CJ.kmap       \
-      Cyrillic.kmap Czech.kmap DE-RU.kmap Danish.kmap Dutch.kmap            \
-      Esperanto.kmap Ethiopic.kmap French.kmap Georgian.kmap German.kmap    \
-      Greek.kmap GreekMono.kmap Guarani.kmap HebrewP.kmap Hungarian.kmap    \
-      KOI8_R.kmap Lithuanian.kmap Mnemonic.kmap Polish.kmap Russian.kmap    \
-      SGML.kmap TeX.kmap Troff.kmap VNtelex.kmap                            \
-      Vietnamese.kmap XKB_iso8859-4.kmap                                    \
-      DanishAlternate.kmap GreekBible.kmap Polytonic.kmap Spanish.kmap      \
-      Thai.kmap VietnameseTelex.kmap Welsh.kmap                             \
-      Hebrew.kmap HebrewIsraeli.kmap HebrewP.kmap Israeli.kmap Yiddish.kmap \
-      Kana.kmap
+# KMAPS=Arabic.kmap ArmenianEast.kmap ArmenianWest.kmap Chinese-CJ.kmap       \
+#       Cyrillic.kmap Czech.kmap DE-RU.kmap Danish.kmap Dutch.kmap            \
+#       Esperanto.kmap Ethiopic.kmap French.kmap Georgian.kmap German.kmap    \
+#       Greek.kmap GreekMono.kmap Guarani.kmap HebrewP.kmap Hungarian.kmap    \
+#       KOI8_R.kmap Lithuanian.kmap Mnemonic.kmap Polish.kmap Russian.kmap    \
+#       SGML.kmap TeX.kmap Troff.kmap VNtelex.kmap                            \
+#       Vietnamese.kmap XKB_iso8859-4.kmap                                    \
+#       DanishAlternate.kmap GreekBible.kmap Polytonic.kmap Spanish.kmap      \
+#       Thai.kmap VietnameseTelex.kmap Welsh.kmap                             \
+#       Hebrew.kmap HebrewIsraeli.kmap HebrewP.kmap Israeli.kmap Yiddish.kmap \
+#       Kana.kmap
 #     Hangul.kmap Hangul2.kmap Hangul3.kmap Unicode2.kmap
 #KMAPS_DIR=$(datadir)/yudit/data
+KMAPS=Mnemonic.kmap
 KMAPS_DIR=kmap
 KMAPS:=$(addprefix $(KMAPS_DIR)/, $(KMAPS))
 
@@ -428,16 +429,16 @@ endif
 #
 # Code pages (only useful to add your own code pages)
 #
-CP=  8859-2.TXT   8859-3.TXT   8859-4.TXT   8859-5.TXT   8859-6.TXT  \
-     8859-7.TXT   8859-8.TXT   8859-9.TXT   8859-10.TXT  8859-11.TXT \
-     8859-13.TXT  8859-14.TXT  8859-15.TXT  8859-16.TXT              \
-     CP437.TXT    CP737.TXT    CP850.TXT    CP852.TXT    CP866.TXT   \
-     CP1125.TXT   CP1250.TXT   CP1251.TXT   CP1252.TXT   CP1256.TXT  \
-     CP1257.TXT   MAC-LATIN2.TXT MAC-ROMAN.TXT                       \
-     kamen.cp     KOI8-R.TXT   KOI8-U.TXT   TCVN.TXT     VISCII.TXT  \
-     CP037.TXT    CP424.TXT    CP500.TXT    CP875.TXT    CP1026.TXT  \
-     ATARIST.TXT
-
+# CP=  8859-2.TXT   8859-3.TXT   8859-4.TXT   8859-5.TXT   8859-6.TXT  \
+#      8859-7.TXT   8859-8.TXT   8859-9.TXT   8859-10.TXT  8859-11.TXT \
+#      8859-13.TXT  8859-14.TXT  8859-15.TXT  8859-16.TXT              \
+#      CP437.TXT    CP737.TXT    CP850.TXT    CP852.TXT    CP866.TXT   \
+#      CP1125.TXT   CP1250.TXT   CP1251.TXT   CP1252.TXT   CP1256.TXT  \
+#      CP1257.TXT   MAC-LATIN2.TXT MAC-ROMAN.TXT                       \
+#      kamen.cp     KOI8-R.TXT   KOI8-U.TXT   TCVN.TXT     VISCII.TXT  \
+#      CP037.TXT    CP424.TXT    CP500.TXT    CP875.TXT    CP1026.TXT  \
+#      ATARIST.TXT
+CP=MAC-ROMAN.TXT
 CP:=$(addprefix cp/,$(CP))
 
 JIS= JIS0208.TXT JIS0212.TXT
