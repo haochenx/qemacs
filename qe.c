@@ -5826,7 +5826,7 @@ static void qe_key_process(int key)
     QEKeyContext *c = &key_ctx;
     EditState *s;
     KeyDef *kd;
-    const CmdDef *d;
+    const CmdDef *d = NULL;
     char buf1[128];
     buf_t outbuf, *out;
     int len;
@@ -5876,6 +5876,15 @@ static void qe_key_process(int key)
         key = c->keys[c->nb_keys - 1];
     }
 
+#ifndef CONFIG_TINY
+    if (s->b->flags & BF_PREVIEW && key == KEY_TAB) {
+        // HACK: special treatment for TAB in preview mode to bypass key binding lookups
+        static CmdDef ds[] = { CMD1("dummy-tab", "TAB", "dummy tab in preview mode", do_tab, 1) };
+        d = &ds[0];
+        goto exec_cmd;
+    }
+#endif
+
     /* see if one command is found */
     kd = qe_find_current_binding(c->keys, c->nb_keys, s->mode, 0);
     if (!kd) {
@@ -5913,7 +5922,7 @@ static void qe_key_process(int key)
     } else
     if (c->nb_keys == kd->nb_keys) {
     exec_cmd:
-        d = kd->cmd;
+        if (!d) d = kd->cmd;
         if (c->describe_key) {
             out = buf_init(&outbuf, buf1, sizeof(buf1));
             buf_put_keys(out, c->keys, c->nb_keys);
