@@ -462,9 +462,12 @@ static const CmdDef basic_commands[] = {
     CMD2( "exit-qemacs", "C-x C-c",
           "Exit Quick Emacs",
           do_exit_qemacs, ESi, "P")
-    CMD0( "refresh", "C-l",
-          "Refresh the display, center the window contents at point",
+    CMD0( "refresh", "C-u C-l",
+          "Refresh the display",
           do_refresh_complete)
+    CMD0( "refresh-and-center", "C-l",
+          "Refresh the display, center the window contents at point",
+          do_refresh_complete_center)
     CMD0( "undo", "C-x u, C-_, f9",
           "Undo the last change",
           do_undo)
