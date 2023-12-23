@@ -51,6 +51,7 @@ static void generic_text_display(EditState *s);
 static void display1(DisplayState *ds);
 #ifndef CONFIG_TINY
 static void save_selection(void);
+static void do_linum_mode(EditState *s, int argval);
 #endif
 
 QEmacsState qe_state;
@@ -1641,6 +1642,9 @@ void do_char(EditState *s, int key, int argval) {
                 return;
             case 'p':
                 do_scroll_up_down(s, -1);
+                return;
+            case 'l':
+                do_linum_mode(s, NO_ARG);
                 return;
             // otherwise fall-though
         }
