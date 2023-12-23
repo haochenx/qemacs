@@ -1145,16 +1145,6 @@ void do_up_down(EditState *s, int n)
     int dir = n < 0 ? -1 : 1;
 
     for (; n != 0; n -= dir) {
-#ifndef CONFIG_TINY
-        if (s->b->flags & BF_PREVIEW) {
-            if (s->mode->scroll_up_down
-            &&  (dir > 0 || s->offset_top > 0)
-            &&  eb_at_bol(s->b, s->offset)) {
-                s->mode->scroll_up_down(s, dir);
-                return;
-            }
-        }
-#endif
         if (s->mode->move_up_down)
             s->mode->move_up_down(s, dir);
     }
