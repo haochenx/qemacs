@@ -1465,6 +1465,8 @@ static void do_describe_window(EditState *s, int argval)
     eb_putc(b1, '\n');
 
     w = 28;
+    eb_printf(b1, "%*s: %s\n", w, "buffer", s->b->name);
+    eb_printf(b1, "%*s: %s\n", w, "filename", s->b->filename);
     eb_printf(b1, "%*s: %d, %d\n", w, "xleft, ytop", s->xleft, s->ytop);
     eb_printf(b1, "%*s: %d, %d\n", w, "width, height", s->width, s->height);
     eb_printf(b1, "%*s: %d, %d, %d, %d\n", w, "x1, y1, x2, y2", s->x1, s->y1, s->x2, s->y2);
@@ -1501,7 +1503,6 @@ static void do_describe_window(EditState *s, int argval)
     eb_printf(b1, "%*s: %d\n", w, "mouse_force_highlight", s->mouse_force_highlight);
     eb_printf(b1, "%*s: %p\n", w, "colorize_func", (void*)s->colorize_func);
     eb_printf(b1, "%*s: %lld\n", w, "default_style", (long long)s->default_style);
-    eb_printf(b1, "%*s: %s\n", w, "buffer", s->b->name);
     if (s->last_buffer)
         eb_printf(b1, "%*s: %s\n", w, "last_buffer", s->last_buffer->name);
     eb_printf(b1, "%*s: %s\n", w, "mode", s->mode->name);
