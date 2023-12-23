@@ -162,6 +162,17 @@ endif
 OBJS+= charsetjis.o charsetmore.o
 
 ifdef CONFIG_ALL_MODES
+ifndef CONFIG_ALL_MODES_IS_ALL_MODES
+# modes not interesting to haochenx is omitted
+OBJS+= modes/unihex.o   modes/bufed.o    modes/orgmode.o  modes/markdown.o \
+       lang/clang.o     lang/xml.o       lang/htmlsrc.o   lang/forth.o     \
+       lang/arm.o       lang/lisp.o      lang/makemode.o  lang/perl.o      \
+       lang/script.o    lang/rust.o      lang/swift.o     lang/groovy.o    \
+       lang/haskell.o   lang/lua.o       lang/python.o    lang/ruby.o      \
+       lang/sql.o       lang/elixir.o    lang/erlang.o    lang/julia.o     \
+       lang/ocaml.o     lang/asm.o       lang/inifile.o   lang/postscript.o \
+       modes/fractal.o  lang/extra-modes.o $(EXTRA_MODES)
+else
 OBJS+= modes/unihex.o   modes/bufed.o    modes/orgmode.o  modes/markdown.o \
        lang/clang.o     lang/xml.o       lang/htmlsrc.o   lang/forth.o     \
        lang/arm.o       lang/lisp.o      lang/makemode.o  lang/perl.o      \
@@ -176,6 +187,7 @@ OBJS+= modes/unihex.o   modes/bufed.o    modes/orgmode.o  modes/markdown.o \
        lang/scad.o      lang/magpie.o    lang/falcon.o    lang/wolfram.o   \
        lang/tiger.o     lang/asm.o       lang/inifile.o   lang/postscript.o \
        modes/fractal.o  lang/extra-modes.o $(EXTRA_MODES)
+endif
 ifndef CONFIG_WIN32
 OBJS+= modes/shell.o    modes/dired.o    modes/archive.o  modes/latex-mode.o
 endif
