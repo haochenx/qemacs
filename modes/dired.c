@@ -1437,8 +1437,11 @@ static const CmdDef dired_commands[] = {
     CMD0( "dired-tab", "TAB",
           "Move focus to the current file",
           do_other_window)
+    CMD2( "dired-exit-qemacs", "q",
+          "Exit Quick Emacs",
+          do_exit_qemacs, ESi, "P")
     /* dired-abort should restore previous buffer in right-window */
-    CMD1( "dired-abort", "C-g, q",
+    CMD1( "dired-abort", "C-g",
           "Quit the dired mode",
           do_delete_window, 0)
     CMD1( "dired-unmark-backward", "DEL",
