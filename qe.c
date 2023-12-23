@@ -1629,9 +1629,20 @@ void do_char(EditState *s, int key, int argval) {
 
 #ifndef CONFIG_TINY
     if (s->b->flags & BF_PREVIEW) {
-        if (key == KEY_SPC) {
-            do_scroll_up_down(s, 2);
-            return;
+        switch (key) {
+            case KEY_SPC:
+                do_scroll_up_down(s, 2);
+                return;
+            case 'b':
+                do_scroll_up_down(s, -2);
+                return;
+            case 'n':
+                do_scroll_up_down(s, 1);
+                return;
+            case 'p':
+                do_scroll_up_down(s, -1);
+                return;
+            // otherwise fall-though
         }
         do_preview_mode(s, 0);
         return;
