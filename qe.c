@@ -1639,6 +1639,12 @@ void do_char(EditState *s, int key, int argval) {
             case 'g':
                 do_bof(s);
                 return;
+            case 'q':
+            case '\t':
+                /* TODO: this should only be activated with filelist,
+                   and we should be more precise on which window to switch to. */
+                do_previous_window(s);
+                return;
             case 'G':
                 do_eof(s);
                 return;
