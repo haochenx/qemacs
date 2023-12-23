@@ -327,7 +327,7 @@ static const CmdDef basic_commands[] = {
           "Move the focus to the previous window",
           do_previous_window)
 #ifndef CONFIG_TINY
-    CMD1( "center-cursor", "M-C-l",
+    CMD1( "center-cursor", "C-l",
           "Center the window contents at point",
           do_center_cursor, 1)
     CMD1( "find-window-up", "C-x up",
@@ -348,7 +348,7 @@ static const CmdDef basic_commands[] = {
     CMD2( "scroll-right", "M-)",
           "Shift the window contents to the right",
           do_scroll_left_right, ESi, "p")
-    CMD1( "preview-mode", "",
+    CMD1( "preview-mode", "M-C-p",
           "Enter preview mode: cursor movement keys cause window scrolling",
           do_preview_mode, 1)
 #endif
@@ -465,9 +465,6 @@ static const CmdDef basic_commands[] = {
     CMD0( "refresh", "C-u C-l",
           "Refresh the display",
           do_refresh_complete)
-    CMD0( "refresh-and-center", "C-l",
-          "Refresh the display, center the window contents at point",
-          do_refresh_complete_center)
     CMD0( "undo", "C-x u, C-_, f9",
           "Undo the last change",
           do_undo)
@@ -502,7 +499,7 @@ static const CmdDef basic_commands[] = {
     CMD2( "global-linum-mode", "",
           "Control the display of line numbers in the left gutter for all buffers",
           do_global_linum_mode, ESi, "P")
-    CMD2( "linum-mode", "C-x RET l, C-c l",
+    CMD2( "linum-mode", "C-x RET l, C-c l, M-C-l",
           "Control the display of line numbers in the left gutter for the current buffer",
           do_linum_mode, ESi, "P")
     CMD2( "toggle-line-numbers", "",    /* for compatibility with previous versions */

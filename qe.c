@@ -8484,16 +8484,6 @@ void do_refresh_complete(EditState *s)
     }
 }
 
-void do_refresh_complete_center(EditState *s)
-{
-    QEmacsState *qs = s->qe_state;
-
-    qs->complete_refresh = 1;
-
-    do_center_cursor(s, 1);
-    do_refresh(s);
-}
-
 void do_other_window(EditState *s)
 {
     QEmacsState *qs = s->qe_state;
