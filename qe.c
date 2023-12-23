@@ -1646,6 +1646,12 @@ void do_char(EditState *s, int key, int argval) {
             case 'l':
                 do_linum_mode(s, NO_ARG);
                 return;
+            case 'g':
+                do_bof(s);
+                return;
+            case 'G':
+                do_eof(s);
+                return;
             // otherwise fall-though
         }
         do_preview_mode(s, 0);
