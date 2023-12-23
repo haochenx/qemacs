@@ -1912,7 +1912,10 @@ void do_overwrite_mode(EditState *s, int argval) {
 void do_tab(EditState *s, int argval)
 {
     /* CG: should do smart complete, smart indent, insert tab */
-    if (s->indent_tabs_mode) {
+    if (s->b->flags & BF_PREVIEW) {
+        do_char(s, '\t', argval);
+        return;
+    } else if (s->indent_tabs_mode) {
         do_char(s, '\t', argval);
     } else {
         int offset = s->offset;
