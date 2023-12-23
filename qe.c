@@ -8890,9 +8890,9 @@ void do_help_for_help(EditState *s)
     eb_puts(b,
             "QEmacs help for help - Press q to quit:\n"
             "\n"
-            "C-h C-h   Show this help\n"
-            "C-h b     Display table of all key bindings\n"
-            "C-h c     Describe key briefly\n"
+            "C-u C-h C-h   Show this help\n"
+            "C-u C-h b     Display table of all key bindings\n"
+            "C-u C-h c     Describe key briefly\n"
             );
     show_popup(s, b, "QEmacs help for help - Press q to quit:");
 }

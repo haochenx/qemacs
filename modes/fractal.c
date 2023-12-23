@@ -1214,7 +1214,7 @@ static void do_mandelbrot_test(EditState *s) {
 }
 
 static const CmdDef fractal_global_commands[] = {
-    CMD0( "mandelbrot-test", "C-h m",
+    CMD0( "mandelbrot-test", "C-u C-h m",
           "Explore the Mandelbrot set in fractal-mode",
           do_mandelbrot_test)
 };

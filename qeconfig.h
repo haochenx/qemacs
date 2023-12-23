@@ -133,7 +133,7 @@ static const CmdDef basic_commands[] = {
     CMD2( "delete-char", "C-d, delete",
           "Delete the character at point",
           do_delete_char, ESi, "*" "P")
-    CMD2( "backward-delete-char", "DEL",
+    CMD2( "backward-delete-char", "DEL, C-h",
           "Delete the character before point",
           do_backspace, ESi, "*" "P")
     CMD0( "set-mark-command", "C-@",
@@ -278,7 +278,7 @@ static const CmdDef basic_commands[] = {
           "Set the numeric prefix argument",
           do_prefix_argument, ESi, "k")
     CMD0( "keyboard-quit",
-          "C-g, C-x C-g, C-c C-g, C-h C-g, ESC ESC ESC",
+          "C-g, C-x C-g, C-c C-g, C-u C-h C-g, ESC ESC ESC",
           "Abort the current command",
           do_keyboard_quit)
     CMD0( "unknown-key",
@@ -392,19 +392,19 @@ static const CmdDef basic_commands[] = {
 
     /*---------------- Help ----------------*/
 
-    CMD2( "toggle-trace-mode", "C-h d",
+    CMD2( "toggle-trace-mode", "C-u C-h d",
           "Enable or disable trace mode: show the *Trace* buffer with debugging info",
           do_toggle_trace_mode, ESi, "P")
-    CMD2( "set-trace-options", "C-h t",
+    CMD2( "set-trace-options", "C-u C-h t",
          "Select the trace options: all, none, command, debug, emulate, shell, tty, pty",
           do_set_trace_options, ESs,
           "s{Trace options: }|trace|")
-    CMD2( "describe-key-briefly", "C-h c, C-h k, f6",
+    CMD2( "describe-key-briefly", "C-u C-h c, C-u C-h k, f6",
           "Describe a key binding",
           do_describe_key_briefly, ESsi,
           "s{Describe key: }|keys|"
           "P")
-    CMD0( "help-for-help", "C-h C-h, f1",
+    CMD0( "help-for-help", "C-u C-h C-h, f1",
           "Show the qemacs help window",
           do_help_for_help)
 

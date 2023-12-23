@@ -2373,7 +2373,7 @@ static const CmdDef extra_commands[] = {
           "Swap words before and after point",
           do_transpose, ESi, "*" "v", CMD_TRANSPOSE_WORDS)
 
-    CMD2( "show-bindings", "C-h B, f5",
+    CMD2( "show-bindings", "C-u C-h B, f5",
           "Show current bindings for a given command",
           do_show_bindings, ESs,
           "s{Show bindings of command: }[command]|command|")
@@ -2392,27 +2392,27 @@ static const CmdDef extra_commands[] = {
     // XXX: should have `qemacs-manual` on `C-h m`
     // XXX: should have `qemacs-faq` on `C-h C-f`
     //      use do_load_file_from_path() to load the above
-    CMD0( "about-qemacs", "C-h ?, f1",
+    CMD0( "about-qemacs", "C-u C-h ?, f1",
           "Display information about Quick Emacs",
           do_about_qemacs)
-    CMD2( "apropos", "C-h a, C-h C-a",
+    CMD2( "apropos", "C-u C-h a, C-u C-h C-a",
           "List commands and variables matching a topic",
           do_apropos, ESs,
           "s{Apropos: }[symbol]|apropos|")
-    CMD2( "describe-bindings", "C-h b",
+    CMD2( "describe-bindings", "C-u C-h b",
           "List local and global key bindings",
           do_describe_bindings, ESi, "p")
-    CMD2( "describe-buffer", "C-h C-b",
+    CMD2( "describe-buffer", "C-u C-h C-b",
           "Show information about the current buffer",
           do_describe_buffer, ESi, "p")
-    CMD2( "describe-function", "C-h f",
+    CMD2( "describe-function", "C-u C-h f",
           "Show information and bindings for a command",
           do_describe_function, ESs,
           "s{Describe function: }[command]|command|")
-    CMD2( "describe-screen", "C-h s, C-h C-s",
+    CMD2( "describe-screen", "C-u C-h s, C-u C-h C-s",
           "Show information about the current screen",
           do_describe_screen, ESi, "p")
-    CMD2( "describe-window", "C-h w, C-h C-w",
+    CMD2( "describe-window", "C-u C-h w, C-u C-h C-w",
           "Show information about the current window",
           do_describe_window, ESi, "p")
 
