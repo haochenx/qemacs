@@ -323,7 +323,7 @@ static const CmdDef basic_commands[] = {
     CMD0( "next-window", "C-x n, M-o",
           "Move the focus to the next window",
           do_other_window)
-    CMD0( "previous-window", "C-x p",
+    CMD0( "previous-window", "C-x p, M-C-o",
           "Move the focus to the previous window",
           do_previous_window)
 #ifndef CONFIG_TINY
