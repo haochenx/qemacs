@@ -563,14 +563,14 @@ static const CmdDef basic_commands[] = {
           do_load_file_from_path, ESsi,
           "s{Load file from path: }[resource]|file|"
           "v", 0)
-    CMD2( "load-config-file", "",
-          "Load a configuration file from the QEPATH",
-          do_load_config_file, ESs,
-          "s{Configuration file: }[resource]|file|")
-    CMD2( "load-qerc", "",
-          "Load a local .qerc settings file",
-          do_load_qerc, ESs,
-          "s{path: }[file]|file|")
+    /* CMD2( "load-config-file", "", */
+    /*       "Load a configuration file from the QEPATH", */
+    /*       do_load_config_file, ESs, */
+    /*       "s{Configuration file: }[resource]|file|") */
+    /* CMD2( "load-qerc", "", */
+    /*       "Load a local .qerc settings file", */
+    /*       do_load_qerc, ESs, */
+    /*       "s{path: }[file]|file|") */
     CMD2( "add-resource-path", "",
           "Add a path to the resource path list",
           do_add_resource_path, ESs,

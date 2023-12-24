@@ -1702,7 +1702,7 @@ static inline void qe_cfg_swap(QEValue *sp, QEValue *sp1) {
 
 /* qescript.c */
 
-int parse_config_file(EditState *s, const char *filename);
+/* int parse_config_file(EditState *s, const char *filename); */
 void do_eval_expression(EditState *s, const char *expression, int argval);
 void do_eval_region(EditState *s, int argval); /* should pass actual offsets */
 void do_eval_buffer(EditState *s, int argval);

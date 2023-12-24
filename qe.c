@@ -72,6 +72,11 @@ int is_player = 1;    /* Start in dired mode when invoked with no arguments */
 static int free_everything;
 #endif
 
+// FIXME.dummy
+int parse_config_file(EditState *s, const char *filename) {
+  return TOK_VOID;
+}
+
 /* mode handling */
 
 static int default_mode_init(EditState *s, EditBuffer *b, int flags) { return 0; }
@@ -7945,7 +7950,7 @@ int qe_load_file(EditState *s, const char *filename1, int lflags, int bflags)
         switch_to_buffer(s, b);
         if (b->data_type == &raw_data_type)
             put_status(s, "(New file)");
-        do_load_qerc(s, s->b->filename);
+        /* do_load_qerc(s, s->b->filename); */
         return 2;
     } else {
         b->st_mode = st_mode = st.st_mode;
@@ -8003,7 +8008,7 @@ int qe_load_file(EditState *s, const char *filename1, int lflags, int bflags)
             b->flags |= BF_READONLY;
         }
         // XXX: problem if buffer is not attached to window
-        do_load_qerc(s, s->b->filename);
+        /* do_load_qerc(s, s->b->filename); */
 
         /* XXX: invalid place */
         edit_invalidate(s, 0);
@@ -9400,49 +9405,49 @@ FILE *open_resource_file(const char *name) {
 
 /******************************************************/
 
-void do_load_config_file(EditState *e, const char *file)
-{
-    QEmacsState *qs = e->qe_state;
-    FindFileState *ffst;
-    char filename[MAX_FILENAME_SIZE];
+/* void do_load_config_file(EditState *e, const char *file) */
+/* { */
+/*     QEmacsState *qs = e->qe_state; */
+/*     FindFileState *ffst; */
+/*     char filename[MAX_FILENAME_SIZE]; */
 
-    if (file && *file) {
-        parse_config_file(e, file);
-        do_refresh(e);
-        return;
-    }
+/*     if (file && *file) { */
+/*         parse_config_file(e, file); */
+/*         do_refresh(e); */
+/*         return; */
+/*     } */
 
-    ffst = find_file_open(qs->res_path, "config", FF_PATH | FF_NODIR);
-    if (!ffst)
-        return;
-    while (find_file_next(ffst, filename, sizeof(filename)) == 0) {
-        parse_config_file(e, filename);
-    }
-    find_file_close(&ffst);
-}
+/*     ffst = find_file_open(qs->res_path, "config", FF_PATH | FF_NODIR); */
+/*     if (!ffst) */
+/*         return; */
+/*     while (find_file_next(ffst, filename, sizeof(filename)) == 0) { */
+/*         parse_config_file(e, filename); */
+/*     } */
+/*     find_file_close(&ffst); */
+/* } */
 
-/* Load .qerc files in all parent directories of filename */
-/* CG: should keep a cache of failed attempts */
-void do_load_qerc(EditState *e, const char *filename)
-{
-    char buf[MAX_FILENAME_SIZE];
-    char *p = buf;
-    QEmacsState *qs = e->qe_state;
-    EditState *saved = qs->active_window;
+/* /\* Load .qerc files in all parent directories of filename *\/ */
+/* /\* CG: should keep a cache of failed attempts *\/ */
+/* void do_load_qerc(EditState *e, const char *filename) */
+/* { */
+/*     char buf[MAX_FILENAME_SIZE]; */
+/*     char *p = buf; */
+/*     QEmacsState *qs = e->qe_state; */
+/*     EditState *saved = qs->active_window; */
 
-    for (;;) {
-        pstrcpy(buf, sizeof(buf), filename);
-        p = strchr(p, '/');
-        if (!p)
-            break;
-        p += 1;
-        pstrcpy(p, buf + sizeof(buf) - p, ".qerc");
-        qs->active_window = e;
-        parse_config_file(e, buf);
-    }
-    if (check_window(&saved))
-        qs->active_window = saved;
-}
+/*     for (;;) { */
+/*         pstrcpy(buf, sizeof(buf), filename); */
+/*         p = strchr(p, '/'); */
+/*         if (!p) */
+/*             break; */
+/*         p += 1; */
+/*         pstrcpy(p, buf + sizeof(buf) - p, ".qerc"); */
+/*         qs->active_window = e; */
+/*         parse_config_file(e, buf); */
+/*     } */
+/*     if (check_window(&saved)) */
+/*         qs->active_window = saved; */
+/* } */
 
 /******************************************************/
 /* command line option handling */
@@ -9879,7 +9884,7 @@ static void qe_init(void *opaque)
 
     /* load config file unless command line option given */
     if (!no_init_file) {
-        do_load_config_file(s, NULL);
+        /* do_load_config_file(s, NULL); */
         s = qs->active_window;
     }
 
@@ -9923,11 +9928,11 @@ static void qe_init(void *opaque)
         arg = argv[i++];
 
         if (*arg == '+' && i < argc) {
-            if (strequal(arg, "+eval")) {
-                do_eval_expression(s, argv[i++], NO_ARG);
-                s = qs->active_window;
-                continue;
-            }
+            /* if (strequal(arg, "+eval")) { */
+            /*     do_eval_expression(s, argv[i++], NO_ARG); */
+            /*     s = qs->active_window; */
+            /*     continue; */
+            /* } */
             if (strequal(arg, "+load")) {
                 /* load script file */
                 parse_config_file(s, argv[i++]);
