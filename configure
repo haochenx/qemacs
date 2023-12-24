@@ -335,6 +335,9 @@ for opt do
       --enable-ffmpeg | --disable-ffmpeg)
         ffmpeg="$value"
         ;;
+      --enable-qescript | --disable-qescript)
+        qescript="$value"
+        ;;
       --enable-* | --disable-*)
         echo "unknown option: $opt"
         exit 1
@@ -676,6 +679,11 @@ fi
 if test "$html" = "yes" ; then
   echo "#define CONFIG_HTML 1" >> $TMPH
   echo "CONFIG_HTML=yes" >> $TMPMAK
+fi
+
+if test "$qescript" = "no" ; then
+  echo "#define CONFIG_NO_QESCRIPT 1" >> $TMPH
+  echo "CONFIG_NO_QESCRIPT=yes" >> $TMPMAK
 fi
 
 if test "$plugins" = "yes" ; then

@@ -9400,6 +9400,18 @@ FILE *open_resource_file(const char *name) {
 
 /******************************************************/
 
+#ifdef CONFIG_NO_QESCRIPT
+
+void do_load_config_file(EditState *e, const char *file) {
+}
+int parse_config_file(EditState *s, const char *filename) {
+  return TOK_VOID;
+}
+void do_load_qerc(EditState *e, const char *file) {
+}
+
+#else /* CONFIG_NO_QESCRIPT */
+
 void do_load_config_file(EditState *e, const char *file)
 {
     QEmacsState *qs = e->qe_state;
@@ -9443,6 +9455,8 @@ void do_load_qerc(EditState *e, const char *filename)
     if (check_window(&saved))
         qs->active_window = saved;
 }
+
+#endif /* CONFIG_NO_QESCRIPT */
 
 /******************************************************/
 /* command line option handling */
@@ -9923,11 +9937,13 @@ static void qe_init(void *opaque)
         arg = argv[i++];
 
         if (*arg == '+' && i < argc) {
+#ifndef CONFIG_NO_QESCRIPT
             if (strequal(arg, "+eval")) {
                 do_eval_expression(s, argv[i++], NO_ARG);
                 s = qs->active_window;
                 continue;
             }
+#endif /* CONFIG_NO_QESCRIPT */
             if (strequal(arg, "+load")) {
                 /* load script file */
                 parse_config_file(s, argv[i++]);
