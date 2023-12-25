@@ -264,7 +264,7 @@ DEPENDS:= qe.h config.h config.mak charset.h color.h cutils.h display.h \
 ifdef CONFIG_QUICKJS
   DEPENDS+= libquickjs/cutils.h libquickjs/libbf.h libquickjs/libregexp.h libquickjs/libunicode.h \
             libquickjs/list.h libquickjs/quickjs-atom.h libquickjs/quickjs-opcode.h \
-            libquickjs/quickjs.h libquickjs/quickjs-libc.h
+            libquickjs/quickjs.h libquickjs/quickjs-libc.h libquickjs/repl.c
 endif
 
 DEPENDS:= $(addprefix $(DEPTH)/, $(DEPENDS))
