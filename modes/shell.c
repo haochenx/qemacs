@@ -249,11 +249,17 @@ static int eval_buf(JSContext *ctx, const void *buf, int buf_len,
     return ret;
 }
 
+static void quickjs_runtime_custom_init(JSRuntime *rt) {
+  JS_SetMemoryLimit(rt, (size_t) 1024 * 1024 * 1024 * 4 /* 4G */);
+  JS_SetMaxStackSize(rt, (size_t) 1024 * 1024 * 1024 * 2 /* 2G */);
+}
+
 int quickjs_repl(int argc, const char **argv)
 {
   JSRuntime *rt;
   JSContext *ctx;
   rt = JS_NewRuntime();
+  quickjs_runtime_custom_init(rt);
   js_std_set_worker_new_context_func(JS_NewCustomContext);
   js_std_init_handlers(rt);
   ctx = JS_NewCustomContext(rt);
