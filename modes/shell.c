@@ -186,6 +186,88 @@ const char *get_shell(void)
     return shell_path;
 }
 
+#ifdef CONFIG_QUICKJS
+
+#include "quickjs-libc.h"
+
+#include "libquickjs/repl.c"
+
+static JSContext *JS_NewCustomContext(JSRuntime *rt)
+{
+  JSContext *ctx = JS_NewContextRaw(rt);
+  if (!ctx)
+    return NULL;
+
+  JS_AddIntrinsicBaseObjects(ctx);
+  JS_AddIntrinsicBigFloat(ctx);
+  JS_AddIntrinsicBigDecimal(ctx);
+  JS_AddIntrinsicOperators(ctx);
+  JS_AddIntrinsicJSON(ctx);
+  JS_AddIntrinsicEval(ctx);
+  JS_AddIntrinsicStringNormalize(ctx);
+  JS_AddIntrinsicPromise(ctx);
+  JS_AddIntrinsicMapSet(ctx);
+  JS_AddIntrinsicDate(ctx);
+  JS_AddIntrinsicTypedArrays(ctx);
+  JS_EnableBignumExt(ctx, TRUE);
+
+  js_init_module_std(ctx, "std");
+  js_init_module_os(ctx, "os");
+
+  JS_SetModuleLoaderFunc(rt, NULL, js_module_loader, NULL);
+  JS_SetHostPromiseRejectionTracker(rt, js_std_promise_rejection_tracker,
+                                    NULL);
+
+  return ctx;
+}
+
+static int eval_buf(JSContext *ctx, const void *buf, int buf_len,
+                    const char *filename, int eval_flags)
+{
+    JSValue val;
+    int ret;
+
+    if ((eval_flags & JS_EVAL_TYPE_MASK) == JS_EVAL_TYPE_MODULE) {
+        /* for the modules, we compile then run to be able to set
+           import.meta */
+        val = JS_Eval(ctx, buf, buf_len, filename,
+                      eval_flags | JS_EVAL_FLAG_COMPILE_ONLY);
+        if (!JS_IsException(val)) {
+            js_module_set_import_meta(ctx, val, TRUE, TRUE);
+            val = JS_EvalFunction(ctx, val);
+        }
+    } else {
+        val = JS_Eval(ctx, buf, buf_len, filename, eval_flags);
+    }
+    if (JS_IsException(val)) {
+        js_std_dump_error(ctx);
+        ret = -1;
+    } else {
+        ret = 0;
+    }
+    JS_FreeValue(ctx, val);
+    return ret;
+}
+
+int quickjs_repl(int argc, const char **argv)
+{
+  JSRuntime *rt;
+  JSContext *ctx;
+  rt = JS_NewRuntime();
+  js_std_set_worker_new_context_func(JS_NewCustomContext);
+  js_std_init_handlers(rt);
+  ctx = JS_NewCustomContext(rt);
+  js_std_add_helpers(ctx, argc, (char**) argv);
+
+  js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
+  js_std_loop(ctx);
+  JS_FreeContext(ctx);
+  JS_FreeRuntime(rt);
+  return 0;
+}
+
+#endif /* CONFIG_QUICKJS */
+
 #define QE_TERM_XSIZE  80
 #define QE_TERM_YSIZE  25
 #define QE_TERM_YSIZE_INFINITE  10000
@@ -228,12 +310,23 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
         int argc = 0;
         int fd0, fd1, fd2;
 
+#ifdef CONFIG_QUICKJS
+        int quickjs_mode = 0;
+        if (cmd && !strcmp(cmd, "*quickjs*")) {
+          quickjs_mode = 1;
+          argv[argc++] = "qjs.xq";
+          argv[argc] = NULL;
+          goto argv_ready;
+        }
+#endif /* CONFIG_QUICKJS */
+
         argv[argc++] = get_shell();
         if (cmd) {
             argv[argc++] = "-c";
             argv[argc++] = cmd;
         }
         argv[argc] = NULL;
+    argv_ready:
 
         /* detach controlling terminal */
 #ifndef CONFIG_DARWIN
@@ -290,7 +383,16 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
             }
         }
 
+#ifdef CONFIG_QUICKJS
+        if (quickjs_mode) {
+            quickjs_repl(argc, argv);
+        } else {
+            execv(argv[0], unconst(char * const *)argv);
+        }
+#else  /* CONFIG_QUICKJS */
         execv(argv[0], unconst(char * const *)argv);
+#endif /* CONFIG_QUICKJS */
+
         exit(1);
     }
     /* return file info */
@@ -2679,6 +2781,66 @@ static void do_shell(EditState *e, int argval)
     put_status(e, "Press C-o to toggle between shell/edit mode");
 }
 
+#ifdef CONFIG_QUICKJS
+static void do_quickjs_repl(EditState *e) {
+    char curpath[MAX_FILENAME_SIZE];
+    EditBuffer *b = NULL;
+
+    /* Start the shell in the default directory of the current window */
+    get_default_path(e->b, e->offset, curpath, sizeof curpath);
+
+    /* avoid messing with the dired pane */
+    e = qe_find_target_window(e, 1);
+
+    /* find shell buffer if any */
+    if (1) {
+        if (strstart(e->b->name, "*qjs", NULL)) {
+            /* If the current buffer is a shell buffer, use it */
+            b = e->b;
+        } else {
+            /* Find the last used shell buffer, if any */
+            if (strstart(error_buffer, "*qjs", NULL)) {
+                b = try_show_buffer(&e, error_buffer);
+            }
+            if (b == NULL) {
+                b = try_show_buffer(&e, "*qjs-repl*");
+            }
+        }
+        if (b) {
+            /* If the process is active, switch to interactive mode */
+            ShellState *s = shell_get_state(e, 0);
+            if (s && s->pid >= 0) {
+                e->offset = b->total_size;
+                if ((s->shell_flags & SF_INTERACTIVE) && !s->grab_keys) {
+                    e->offset = s->cur_offset;
+                    e->interactive = 1;
+                }
+                return;
+            }
+            /* otherwise, restart the process here */
+            e->offset = b->total_size;
+            /* restart the shell in the same directory */
+            get_default_path(e->b, e->offset, curpath, sizeof curpath);
+        }
+    }
+
+    /* create new shell buffer or restart shell in current buffer */
+    b = new_shell_buffer(b, e, "*qjs-repl*", "Shell process", curpath, "*quickjs*",
+                         SF_COLOR | SF_INTERACTIVE);
+    if (!b)
+        return;
+
+    b->default_mode = &shell_mode;
+    switch_to_buffer(e, b);
+    /* force interactive mode if restarting */
+    shell_mode.mode_init(e, b, 0);
+    // XXX: should update the terminal size and notify the process
+    //do_shell_refresh(e, 0);
+    set_error_offset(b, 0);
+    put_status(e, "Press C-o to toggle between repl/edit mode");
+}
+#endif /* CONFIG_QUICKJS */
+
 static void do_man(EditState *s, const char *arg)
 {
     char bufname[32];
@@ -3637,13 +3799,18 @@ static const CmdDef shell_commands[] = {
 
 /* shell global commands */
 static const CmdDef shell_global_commands[] = {
-    CMD2( "shell", "C-x RET RET, C-x LF LF",
+    CMD2( "shell", "C-x RET RET, C-x LF LF, M-C-g s",
           "Start a shell buffer or move to the last shell buffer used",
           do_shell, ESi, "p")
     CMD2( "shell-command", "M-!",
           "Run a shell command and display a new buffer with its collected output",
           do_shell_command, ESs,
           "s{Shell command: }|shell-command|")
+#if CONFIG_QUICKJS
+    CMD0( "qjs-repl", "M-C-g j",
+          "Start a QuickJS JavaScript REPL",
+          do_quickjs_repl)
+#endif /* CONFIG_QUICKJS */
     CMD2( "ssh", "",
           "Start a shell buffer with a new remote shell connection",
           do_ssh, ESs,

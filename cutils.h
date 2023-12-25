@@ -522,4 +522,15 @@ static inline void qe__list_del(struct list_head *prev, struct list_head *next)
 #define list_for_each_prev(elem, head) \
    for (elem = (void *)(head)->prev; elem != (void *)(head); elem = elem->prev)
 
+void rqsort(void *base, size_t nmemb, size_t size,
+            int (*cmp)(const void *, const void *, void *),
+            void *arg);
+
+static inline int has_suffix(const char *str, const char *suffix)
+{
+    size_t len = strlen(str);
+    size_t slen = strlen(suffix);
+    return (len >= slen && !memcmp(str + len - slen, suffix, slen));
+}
+
 #endif

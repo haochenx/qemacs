@@ -55,8 +55,8 @@ int lre_parse_escape(const uint8_t **pp, int allow_utf16);
 LRE_BOOL lre_is_space(int c);
 
 /* must be provided by the user */
-#define lre_check_stack_overflow qe_lre_check_stack_overflow
-#define lre_realloc qe_lre_realloc
+#define lre_check_stack_overflow qjs_lre_check_stack_overflow
+#define lre_realloc qjs_lre_realloc
 
 LRE_BOOL lre_check_stack_overflow(void *opaque, size_t alloca_size);
 void *lre_realloc(void *opaque, void *ptr, size_t size);

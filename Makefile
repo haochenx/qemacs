@@ -163,6 +163,11 @@ ifdef CONFIG_UNICODE_JOIN
   OBJS+= libunicode.o libregexp.o
 endif
 
+ifdef CONFIG_QUICKJS
+  OBJS+= libquickjs/quickjs.o libquickjs/quickjs-libc.o libquickjs/libbf.o
+  CFLAGS+= -I./libquickjs
+endif
+
 # more charsets if needed
 OBJS+= charsetjis.o charsetmore.o
 
@@ -254,6 +259,12 @@ SRCS:= $(OBJS:.o=.c)
 DEPENDS:= qe.h config.h config.mak charset.h color.h cutils.h display.h \
 	qestyles.h unicode_join.h util.h variables.h \
 	wcwidth.h lang/clang.h
+
+ifdef CONFIG_QUICKJS
+  DEPENDS+= libquickjs/cutils.h libquickjs/libbf.h libquickjs/libregexp.h libquickjs/libunicode.h \
+            libquickjs/list.h libquickjs/quickjs-atom.h libquickjs/quickjs-opcode.h \
+            libquickjs/quickjs.h libquickjs/quickjs-libc.h
+endif
 
 DEPENDS:= $(addprefix $(DEPTH)/, $(DEPENDS))
 
@@ -351,6 +362,11 @@ $(OBJS_DIR)/$(TARGET)_modules.c: $(SRCS) Makefile config.mak
 	@grep -h ^qe_module_init $(SRCS)                    >> $@
 	@echo '#undef qe_module_init'                       >> $@
 	@echo '}'                                           >> $@
+
+$(OBJS_DIR)/libquickjs/%.o: libquickjs/%.c $(wildcard libquickjs/*.h) Makefile
+	$(echo) CC $(ECHO_CFLAGS) -c $<
+	$(cmd)  mkdir -p $(dir $@)
+	$(cmd) $(CC) $(CFLAGS) -o $@ -funsigned-char -D_GNU_SOURCE -DCONFIG_VERSION=\"2023-12-09\" -DCONFIG_BIGNUM -c $<
 
 $(OBJS_DIR)/cfb.o: cfb.c cfb.h fbfrender.h
 $(OBJS_DIR)/charset.o: charset.c wcwidth.c

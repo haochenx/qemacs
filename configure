@@ -338,6 +338,9 @@ for opt do
       --enable-qescript | --disable-qescript)
         qescript="$value"
         ;;
+      --enable-quickjs | --disable-quickjs)
+        quickjs="$value"
+        ;;
       --enable-* | --disable-*)
         echo "unknown option: $opt"
         exit 1
@@ -684,6 +687,11 @@ fi
 if test "$qescript" = "no" ; then
   echo "#define CONFIG_NO_QESCRIPT 1" >> $TMPH
   echo "CONFIG_NO_QESCRIPT=yes" >> $TMPMAK
+fi
+
+if test "$quickjs" = "yes" ; then
+  echo "#define CONFIG_QUICKJS 1" >> $TMPH
+  echo "CONFIG_QUICKJS=yes" >> $TMPMAK
 fi
 
 if test "$plugins" = "yes" ; then
