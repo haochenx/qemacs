@@ -43,8 +43,10 @@
 #include "cutils.h"
 #include "list.h"
 #include "quickjs.h"
-#include "libregexp.h"
 #include "libbf.h"
+
+#include "libregexp.h"
+#define lre_exec(...) lre_exec(REExecFlavor_QUICKJS, __VA_ARGS__)
 
 #define OPTIMIZE         1
 #define SHORT_OPCODES    1

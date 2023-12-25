@@ -28,6 +28,7 @@
 
 #ifdef CONFIG_REGEX
 #include "libregexp.h"
+#define lre_exec(...) lre_exec(REExecFlavor_QEMACS, __VA_ARGS__)
 
 BOOL lre_check_stack_overflow(void *opaque, size_t alloca_size) {
     return FALSE;
