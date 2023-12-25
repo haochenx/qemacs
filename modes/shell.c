@@ -199,6 +199,7 @@ static JSContext *JS_NewCustomContext(JSRuntime *rt)
     return NULL;
 
   JS_AddIntrinsicBaseObjects(ctx);
+  JS_AddIntrinsicRegExp(ctx);
   JS_AddIntrinsicBigFloat(ctx);
   JS_AddIntrinsicBigDecimal(ctx);
   JS_AddIntrinsicOperators(ctx);
@@ -206,9 +207,11 @@ static JSContext *JS_NewCustomContext(JSRuntime *rt)
   JS_AddIntrinsicEval(ctx);
   JS_AddIntrinsicStringNormalize(ctx);
   JS_AddIntrinsicPromise(ctx);
+  JS_AddIntrinsicProxy(ctx);
   JS_AddIntrinsicMapSet(ctx);
   JS_AddIntrinsicDate(ctx);
   JS_AddIntrinsicTypedArrays(ctx);
+  JS_AddIntrinsicBigInt(ctx);
   JS_EnableBignumExt(ctx, TRUE);
 
   js_init_module_std(ctx, "std");
@@ -272,6 +275,39 @@ int quickjs_repl(int argc, const char **argv)
   return 0;
 }
 
+#ifdef CONFIG_LIPS
+#include "lips/lips-repl.c"
+int lips_repl(int argc, const char **argv)
+{
+  JSRuntime *rt;
+  JSContext *ctx;
+  rt = JS_NewRuntime();
+  quickjs_runtime_custom_init(rt);
+  js_std_set_worker_new_context_func(JS_NewCustomContext);
+  js_std_init_handlers(rt);
+  ctx = JS_NewCustomContext(rt);
+  js_std_add_helpers(ctx, argc, (char**) argv);
+
+  const char *str = "import * as std from 'std';\n"
+    "import * as os from 'os';\n"
+    "globalThis.std = std;\n"
+    "globalThis.os = os;\n";
+  eval_buf(ctx, str, strlen(str), "<input>", JS_EVAL_TYPE_MODULE);
+
+  js_std_eval_binary(ctx, qjsc_lips_repl, qjsc_lips_repl_size, 0);
+  js_std_loop(ctx);
+  JS_FreeContext(ctx);
+  JS_FreeRuntime(rt);
+  return 0;
+}
+#endif /* CONFIG_LIPS */
+
+enum QuickJS_MODE {
+  NO_QUICKJS_SELECTED = 0,
+  QUICKJS_REPL_SELECTED,
+  QUICKJS_LIPS_REPL_SELECTED,
+};
+
 #endif /* CONFIG_QUICKJS */
 
 #define QE_TERM_XSIZE  80
@@ -317,12 +353,19 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
         int fd0, fd1, fd2;
 
 #ifdef CONFIG_QUICKJS
-        int quickjs_mode = 0;
-        if (cmd && !strcmp(cmd, "*quickjs*")) {
-          quickjs_mode = 1;
-          argv[argc++] = "qjs.xq";
-          argv[argc] = NULL;
-          goto argv_ready;
+        enum QuickJS_MODE quickjs_mode = NO_QUICKJS_SELECTED;
+        if (cmd) {
+          if (!strcmp(cmd, "*quickjs*")) {
+            quickjs_mode = QUICKJS_REPL_SELECTED;
+            argv[argc++] = "qjs.xq";
+            argv[argc] = NULL;
+            goto argv_ready;
+          } else if (!strcmp(cmd, "*lips*")) {
+            quickjs_mode = QUICKJS_LIPS_REPL_SELECTED;
+            argv[argc++] = "lips.xq";
+            argv[argc] = NULL;
+            goto argv_ready;
+          }
         }
 #endif /* CONFIG_QUICKJS */
 
@@ -391,9 +434,20 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
 
 #ifdef CONFIG_QUICKJS
         if (quickjs_mode) {
+          switch (quickjs_mode) {
+          case QUICKJS_REPL_SELECTED:
             quickjs_repl(argc, argv);
+            break;
+          case QUICKJS_LIPS_REPL_SELECTED:
+            lips_repl(argc, argv);
+            break;
+          default:
+            put_status(NULL, "panic: unknown quickjs_mode: %d",
+                       quickjs_mode);
+            return -1;
+          }
         } else {
-            execv(argv[0], unconst(char * const *)argv);
+          execv(argv[0], unconst(char * const *)argv);
         }
 #else  /* CONFIG_QUICKJS */
         execv(argv[0], unconst(char * const *)argv);
@@ -2847,6 +2901,66 @@ static void do_quickjs_repl(EditState *e) {
 }
 #endif /* CONFIG_QUICKJS */
 
+#ifdef CONFIG_LIPS
+static void do_lips_repl(EditState *e) {
+    char curpath[MAX_FILENAME_SIZE];
+    EditBuffer *b = NULL;
+
+    /* Start the shell in the default directory of the current window */
+    get_default_path(e->b, e->offset, curpath, sizeof curpath);
+
+    /* avoid messing with the dired pane */
+    e = qe_find_target_window(e, 1);
+
+    /* find shell buffer if any */
+    if (1) {
+        if (strstart(e->b->name, "*lips", NULL)) {
+            /* If the current buffer is a shell buffer, use it */
+            b = e->b;
+        } else {
+            /* Find the last used shell buffer, if any */
+            if (strstart(error_buffer, "*lips", NULL)) {
+                b = try_show_buffer(&e, error_buffer);
+            }
+            if (b == NULL) {
+                b = try_show_buffer(&e, "*lips-repl*");
+            }
+        }
+        if (b) {
+            /* If the process is active, switch to interactive mode */
+            ShellState *s = shell_get_state(e, 0);
+            if (s && s->pid >= 0) {
+                e->offset = b->total_size;
+                if ((s->shell_flags & SF_INTERACTIVE) && !s->grab_keys) {
+                    e->offset = s->cur_offset;
+                    e->interactive = 1;
+                }
+                return;
+            }
+            /* otherwise, restart the process here */
+            e->offset = b->total_size;
+            /* restart the shell in the same directory */
+            get_default_path(e->b, e->offset, curpath, sizeof curpath);
+        }
+    }
+
+    /* create new shell buffer or restart shell in current buffer */
+    b = new_shell_buffer(b, e, "*lips-repl*", "Shell process", curpath, "*lips*",
+                         SF_COLOR | SF_INTERACTIVE);
+    if (!b)
+        return;
+
+    b->default_mode = &shell_mode;
+    switch_to_buffer(e, b);
+    /* force interactive mode if restarting */
+    shell_mode.mode_init(e, b, 0);
+    // XXX: should update the terminal size and notify the process
+    //do_shell_refresh(e, 0);
+    set_error_offset(b, 0);
+    put_status(e, "Press C-o to toggle between repl/edit mode");
+}
+#endif /* CONFIG_LIPS */
+
 static void do_man(EditState *s, const char *arg)
 {
     char bufname[32];
@@ -3817,6 +3931,11 @@ static const CmdDef shell_global_commands[] = {
           "Start a QuickJS JavaScript REPL",
           do_quickjs_repl)
 #endif /* CONFIG_QUICKJS */
+#if CONFIG_LIPS
+    CMD0( "lips-repl", "M-C-g e",
+          "Start a LIPS REPL",
+          do_lips_repl)
+#endif /* CONFIG_LIPS */
     CMD2( "ssh", "",
           "Start a shell buffer with a new remote shell connection",
           do_ssh, ESs,

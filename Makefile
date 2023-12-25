@@ -267,6 +267,10 @@ ifdef CONFIG_QUICKJS
             libquickjs/quickjs.h libquickjs/quickjs-libc.h libquickjs/repl.c
 endif
 
+ifdef CONFIG_LIPS
+  DEPENDS+= lips/lips-repl.c
+endif
+
 DEPENDS:= $(addprefix $(DEPTH)/, $(DEPENDS))
 
 BINDIR:=$(DEPTH)/bin

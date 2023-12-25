@@ -341,6 +341,9 @@ for opt do
       --enable-quickjs | --disable-quickjs)
         quickjs="$value"
         ;;
+      --enable-lips | --disable-lips)
+        lips="$value"
+        ;;
       --enable-* | --disable-*)
         echo "unknown option: $opt"
         exit 1
@@ -692,6 +695,11 @@ fi
 if test "$quickjs" = "yes" ; then
   echo "#define CONFIG_QUICKJS 1" >> $TMPH
   echo "CONFIG_QUICKJS=yes" >> $TMPMAK
+fi
+
+if test "$lips" = "yes" ; then
+  echo "#define CONFIG_LIPS 1" >> $TMPH
+  echo "CONFIG_LIPS=yes" >> $TMPMAK
 fi
 
 if test "$plugins" = "yes" ; then
