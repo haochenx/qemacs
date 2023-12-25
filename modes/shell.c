@@ -3940,11 +3940,11 @@ static const CmdDef shell_global_commands[] = {
           "Start a shell buffer with a new remote shell connection",
           do_ssh, ESs,
           "s{Open connection to (host or user@host: }|ssh|")
-    CMD2( "compile", "C-x C-e",
+    CMD2( "compile", "C-c C-c",
           "Run a compiler command and display a new buffer with its collected output",
           do_compile, ESs,
           "s{Compile command: }|compile|")
-    CMD2( "make", "C-x m",
+    CMD2( "make", "",
           "Run make and display a new buffer with its collected output",
           do_compile, ESs,
           "@{make}")
@@ -3952,10 +3952,10 @@ static const CmdDef shell_global_commands[] = {
           "Run man for a command and display a new buffer with its collected output",
           do_man, ESs,
           "s{Show man page for: }|man|")
-    CMD3( "next-error", "C-x C-n, C-x `, M-g n, M-g M-n",
+    CMD3( "next-error", "C-c C-x, ",
           "Move to the next error from the last shell command output",
           do_next_error, ESii, "P" "v", +1)
-    CMD3( "previous-error", "C-x C-p, M-g p, M-g M-p",
+    CMD3( "previous-error", "C-u C-c C-x, C-c C-u",
           "Move to the previous error from the last shell command output",
           do_next_error, ESii, "P" "v", -1)
 };
