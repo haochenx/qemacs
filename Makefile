@@ -91,6 +91,7 @@ TARGETLIBS:=
 ifeq (,$(TARGET))
 TARGET:=qe
 TARGETS:=kmaps ligatures tqe xq
+TARGETS+=qe.gz tqe.gz xq.gz
 TOP:=1
 else
 TOP:=0
@@ -344,6 +345,9 @@ ffplay$(EXE): qe$(EXE) Makefile
 	ln -sf $< $@
 endif
 
+%.gz: %
+	$(echo) GZIP "$$(printf %-4s $<)" "=>" "$$(cat $< | gzip | tee $@ | wc -c)" "bytes"
+
 $(OBJS_DIR)/$(TARGET)_modules.o: $(OBJS_DIR)/$(TARGET)_modules.c Makefile
 	$(echo) CC $(ECHO_CFLAGS) -c $<
 	$(cmd)  $(CC) $(DEFINES) $(CFLAGS) -o $@ -c $<
@@ -572,7 +576,7 @@ clean:
 	$(MAKE) -C libqhtml clean
 	rm -f qe-doc.aux qe-doc.info qe-doc.log qe-doc.pdf qe-doc.toc
 	rm -rf *.dSYM *.gch .objs* .tobjs* .xobjs* bin
-	rm -f *~ *.o *.a *.exe *_g *_debug TAGS gmon.out core *.exe.stackdump \
+	rm -f *~ *.o *.a *.exe *_g *_debug *.gz TAGS gmon.out core *.exe.stackdump \
            qe xq tqe tqe1 xqe kmaptoqe ligtoqe html2png cptoqe jistoqe \
            fbftoqe fbffonts.c allmodules.txt basemodules.txt '.#'*[0-9]
 
