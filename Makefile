@@ -557,7 +557,7 @@ clean:
 	rm -f qe-doc.aux qe-doc.info qe-doc.log qe-doc.pdf qe-doc.toc
 	rm -rf *.dSYM *.gch .objs* .tobjs* .xobjs* bin
 	rm -f *~ *.o *.a *.exe *_g *_debug TAGS gmon.out core *.exe.stackdump \
-           qe tqe tqe1 xqe kmaptoqe ligtoqe html2png cptoqe jistoqe \
+           qe xq tqe tqe1 xqe kmaptoqe ligtoqe html2png cptoqe jistoqe \
            fbftoqe fbffonts.c allmodules.txt basemodules.txt '.#'*[0-9]
 
 distclean: clean
