@@ -9996,7 +9996,7 @@ static void qe_init(void *opaque)
 #ifdef CONFIG_WIN32
 int main1(int argc, char **argv)
 #else
-int main(int argc, char **argv)
+int main0(int argc, char **argv)
 #endif
 {
     QEmacsState *qs = &qe_state;

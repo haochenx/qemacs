@@ -100,6 +100,7 @@ ifeq (,$(TARGET_OBJ))
 TARGET_OBJ:=$(TARGET)
 endif
 
+MAIN_OBJS:=qe_main.o
 OBJS:= qe.o cutils.o util.o color.o charset.o buffer.o search.o input.o display.o \
        modes/hex.o
 ifndef CONFIG_NO_QESCRIPT
@@ -277,6 +278,7 @@ BINDIR:=$(DEPTH)/bin
 
 OBJS_DIR:= $(DEPTH)/.objs/$(TARGET_OS)-$(TARGET_ARCH)-$(CC)/$(TARGET_OBJ)$(DEBUG_SUFFIX)
 CFLAGS+= -I$(OBJS_DIR)
+MAIN_OBJS:= $(addprefix $(OBJS_DIR)/, $(MAIN_OBJS))
 OBJS:= $(addprefix $(OBJS_DIR)/, $(OBJS))
 OBJS+= $(OBJS_DIR)/$(TARGET)_modules.o
 
@@ -300,7 +302,7 @@ $(TARGET)$(DEBUG_SUFFIX)$(EXE): $(OBJS) $(DEP_LIBS)
 	$(echo) LD $@
 	$(cmd)  $(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 else
-$(TARGET)_g$(EXE): $(OBJS) $(DEP_LIBS)
+$(TARGET)_g$(EXE): $(OBJS) $(MAIN_OBJS) $(DEP_LIBS)
 	$(echo) LD $@
 	$(cmd)  $(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
@@ -375,6 +377,10 @@ $(OBJS_DIR)/libquickjs/%.o: libquickjs/%.c $(wildcard libquickjs/*.h) Makefile
 	$(echo) CC $(ECHO_CFLAGS) -c $<
 	$(cmd)  mkdir -p $(dir $@)
 	$(cmd) $(CC) $(CFLAGS) -o $@ -funsigned-char -D_GNU_SOURCE -DCONFIG_VERSION=\"2023-12-09\" -DCONFIG_BIGNUM -c $<
+
+libquickjs/qjsc$(EXE): $(OBJS_DIR)/libquickjs/qjsc.o $(OBJS) $(DEP_LIBS)
+	$(echo) LD $@
+	$(cmd) $(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 $(OBJS_DIR)/cfb.o: cfb.c cfb.h fbfrender.h
 $(OBJS_DIR)/charset.o: charset.c wcwidth.c
@@ -488,6 +494,19 @@ charsetmore.c: cp/cpdata.txt $(CP) $(BINDIR)/cptoqe$(EXE) Makefile
 charsetjis.def: $(JIS) $(BINDIR)/jistoqe$(EXE) Makefile
 	$(BINDIR)/jistoqe $(JIS) > $@
 endif
+
+#
+# QuickJS Bytecodes
+#
+
+QJSC=libquickjs/qjsc$(EXE)
+.PHONY: compile-with-qjsc
+.PRECIOUS: libquickjs/qjsc$(EXE) libquickjs/repl.c lips/lips-repl.c
+
+compile-with-qjsc:
+	$(MAKE) libquickjs/qjsc$(EXE)
+	$(QJSC)  -N qjsc_repl -m -o libquickjs/repl.c -c libquickjs/repl.js
+	$(QJSC)  -N qjsc_lips_repl -o lips/lips-repl.c -c lips/lips-repl.js
 
 #
 # Unicode tables
