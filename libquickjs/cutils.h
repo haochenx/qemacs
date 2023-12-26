@@ -65,7 +65,7 @@ enum {
 #define strstart(str, val, ptr)    qe_strstart(str, val, ptr)
 #define strend(str, val, ptr)      qe_strend(str, val, ptr)
 
-void pstrcpy(char *buf, int buf_size, const char *str);
+char *pstrcpy(char *buf, int buf_size, const char *str);
 char *pstrcat(char *buf, int buf_size, const char *s);
 int strstart(const char *str, const char *val, const char **ptr);
 

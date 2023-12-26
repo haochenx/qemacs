@@ -1,0 +1,1 @@
+xterm-pty/node_modules/xterm/lib/xterm.js

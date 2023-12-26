@@ -253,8 +253,75 @@ static int eval_buf(JSContext *ctx, const void *buf, int buf_len,
 }
 
 static void quickjs_runtime_custom_init(JSRuntime *rt) {
-  JS_SetMemoryLimit(rt, (size_t) 1024 * 1024 * 1024 * 4 /* 4G */);
-  JS_SetMaxStackSize(rt, (size_t) 1024 * 1024 * 1024 * 2 /* 2G */);
+  /* JS_SetMemoryLimit(rt, (size_t) 1024 * 1024 * 768 /\* 768M *\/); */
+  JS_SetMaxStackSize(rt, (size_t) 1024 * 1024 * 512 /* 512M */);
+}
+
+static struct termios oldtty;
+static void (*term_exit_body)(void) = NULL;
+
+static void term_exit0(void)
+{
+    tcsetattr(0, TCSANOW, &oldtty);
+}
+
+static void term_exit(void) {
+  if (term_exit_body) term_exit_body();
+}
+
+static void reset_tty() {
+
+  int fd = fileno(stdin);
+
+    struct termios tty;
+    memset(&tty, 0, sizeof(tty));
+
+    tcgetattr(fd, &tty);
+    if (!term_exit_body) {
+      oldtty = tty;
+    }
+
+    /* try to mimic `stty sane` (with a few exceptions though):
+   sane          same as cread -ignbrk brkint -inlcr -igncr icrnl -iutf8
+                 -ixoff -iuclc -ixany imaxbel opost -olcuc -ocrnl onlcr
+                 -onocr -onlret -ofill -ofdel nl0 cr0 tab0 bs0 vt0 ff0
+                 isig icanon iexten echo echoe echok -echonl -noflsh
+                 -xcase -tostop -echoprt echoctl echoke, all special
+                 characters to their default values
+     */
+    tty.c_iflag &= ~(IGNBRK | INLCR | IGNCR  |
+                     IXOFF | IUCLC | IXANY );
+    tty.c_iflag |= (BRKINT | ICRNL | IMAXBEL | IUTF8);
+
+    tty.c_oflag &= ~(OLCUC | OCRNL | ONOCR | ONLRET | OFILL | OFDEL);
+    tty.c_oflag |=  (OPOST | ONLCR);
+
+    tty.c_lflag |=  (ISIG | ICANON | IEXTEN | ECHO | ECHOE | ECHOK | ECHOCTL | ECHOKE);
+    tty.c_lflag &= ~(ECHONL | NOFLSH | XCASE | TOSTOP | ECHOPRT);
+
+    tty.c_cflag &= ~(CSIZE | PARENB);
+    tty.c_cflag |= (CS7 | CREAD);
+
+    tty.c_cc[VMIN] = 1;   /* 1 byte */
+    tty.c_cc[VTIME] = 0;  /* no timer */
+
+    tcsetattr(fd, TCSANOW, &tty);
+
+    fputs("\033c", stdout);
+
+    if (!term_exit_body) {
+      term_exit_body = term_exit0;
+      atexit(term_exit);
+    }
+}
+
+static void restore_tty() {
+  struct termios tty;
+  tty = oldtty;
+  term_exit_body = NULL;
+
+  fputs("\033c", stdout);
+  tcsetattr(fileno(stdin), TCSANOW, &tty);
 }
 
 int quickjs_repl(int argc, const char **argv)
@@ -324,6 +391,7 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
     char columns_string[20];
     struct winsize ws;
 
+#if !EMSCRIPTEN
     pty_fd = get_pty(tty_name, sizeof(tty_name));
     if (pty_fd < 0) {
         put_status(NULL, "run_process: cannot get tty: %s",
@@ -344,6 +412,10 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
         put_status(NULL, "run_process: cannot fork");
         return -1;
     }
+#else /* !EMSCRIPTEN */
+    pid = 0;
+#endif /* !EMSCRIPTEN */
+
     if (pid == 0) {
         /* child process */
         const char *argv[4];
@@ -377,10 +449,11 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
         argv[argc] = NULL;
     argv_ready:
 
+#if !EMSCRIPTEN
         /* detach controlling terminal */
 #ifndef CONFIG_DARWIN
         setsid();
-#endif
+#endif /* CONFIG_DARWIN */
         /* close all files */
         nb_fds = getdtablesize();
         for (i = 0; i < nb_fds; i++)
@@ -403,7 +476,7 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
         }
 #ifdef CONFIG_DARWIN
         setsid();
-#endif
+#endif /* CONFIG_DARWIN */
         if (shell_flags & SF_INFINITE) {
             rows += QE_TERM_YSIZE_INFINITE;
         }
@@ -432,6 +505,10 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
             }
         }
 
+#else /* !EMSCRIPTEN */
+        reset_tty();
+#endif /* !EMSCRIPTEN */
+
 #ifdef CONFIG_QUICKJS
         if (quickjs_mode) {
           switch (quickjs_mode) {
@@ -453,7 +530,12 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
         execv(argv[0], unconst(char * const *)argv);
 #endif /* CONFIG_QUICKJS */
 
+#if !EMSCRIPTEN
         exit(1);
+#else /* !EMSCRIPTEN */
+        restore_tty();
+        return 0;
+#endif /* !EMSCRIPTEN */
     }
     /* return file info */
     *fd_ptr = pty_fd;
@@ -2692,6 +2774,7 @@ EditBuffer *new_shell_buffer(EditBuffer *b0, EditState *e,
     const char *lang;
     int cols, rows;
 
+#if !EMSCRIPTEN
     b = b0;
     if (!b) {
         b = eb_new(bufname, BF_SAVELOG | BF_SHELL);
@@ -2756,6 +2839,12 @@ EditBuffer *new_shell_buffer(EditBuffer *b0, EditState *e,
     set_read_handler(s->pty_fd, shell_read_cb, s);
     set_pid_handler(s->pid, shell_pid_cb, s);
     return b;
+#else /* !EMSCRIPTEN */
+    run_process(cmd, &s->pty_fd, &s->pid, cols, rows, path, shell_flags);
+    do_refresh_complete(e);
+    put_status(e, "%s has exited", cmd);
+    return NULL;
+#endif /* !EMSCRIPTEN */
 }
 
 /* If a window is attached to buffer b, activate it,

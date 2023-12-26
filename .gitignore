@@ -11,6 +11,8 @@ bin
 *.o
 *.so
 *.exe
+*.wasm
+*.wasm.map
 *.dSYM
 *_g
 *_debug
@@ -21,6 +23,13 @@ tqe
 tqe1
 xqe
 xq
+qe.mjs
+tqe.mjs
+tqe1.mjs
+xqe.mjs
+xq.mjs
+*_g.mjs
+*.worker.js
 # temp-directories
 doc
 junk

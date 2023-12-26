@@ -82,7 +82,7 @@ mmap="yes"
 kmaps="yes"
 modes="yes"
 bidir="yes"
-exe=""
+exe=".mjs"
 
 # OS specific
 targetos=`uname -s`

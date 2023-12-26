@@ -17725,6 +17725,7 @@ var interpreter = lips.Interpreter('demo', intf);
   function input(prompt) {
     if (typeof prompt === "string") {
       std.out.puts(prompt);
+      std.out.flush();
     }
     return readline(handle_quit);
   }

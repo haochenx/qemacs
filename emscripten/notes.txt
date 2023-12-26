@@ -1,0 +1,30 @@
+successfully runnable vension:
+
+emconfigure ./configure --cc=emcc --extra-cflags='-pthread -Os -Wcast-function-type -gsource-map' --extra-ldflags='-gsource-map -sSTACK_SIZE=128MB -s INITIAL_MEMORY=1GB -s MAXIMUM_MEMORY=2GB -pthread "-sEXPORTED_FUNCTIONS=_malloc,_main" -s ALLOW_MEMORY_GROWTH=1 -s ALLOW_TABLE_GROWTH=1 -s ABORTING_MALLOC -sPROXY_TO_PTHREAD --js-library=/Users/hx/tryouts/xterm-pty/xterm-pty/emscripten-pty.js' --enable-quickjs --enable-lips
+
+emmake make VERBOSE=1 qe.mjs
+
+(cd emscripten && ./setup-xterm-pty.sh)
+
+to start the demo, run `cp qe.mjs emscripten && (cd emscripten && python3 server.py)`
+
+gotchas:
+
+- `JS_SetMemoryLimit(rt, (size_t) 1024 * 1024 * 768 /* 768M */);` does harm: not sure why
+- pty needs to be looked at
+- turning off optimization may give stack overflow or hit wasm local count limitation
+- qjsc bytecode does not seem to be the same as native ones
+- tcgetattr and tcsetattr (that of xterm-pty) seems to be buggy that M-C-g j does not load correctly
+- *nix style fork(2) does not work
+
+to obtain libquickjs/qjsc.js, run:
+
+# note the inclusion of `-sNODERAWFS=1`
+emcc -gsource-map -sNODERAWFS=1 -sSTACK_SIZE=5MB -s INITIAL_MEMORY=1GB -s MAXIMUM_MEMORY=2GB "-sEXPORTED_FUNCTIONS=_malloc,_main" -s ALLOW_MEMORY_GROWTH=1 -s ALLOW_TABLE_GROWTH=1 -s ABORTING_MALLOC -o libquickjs/qjsc.js .objs/Darwin-arm64-emcc/qe/libquickjs/qjsc.o .objs/Darwin-arm64-emcc/qe/qe.o .objs/Darwin-arm64-emcc/qe/cutils.o .objs/Darwin-arm64-emcc/qe/util.o .objs/Darwin-arm64-emcc/qe/color.o .objs/Darwin-arm64-emcc/qe/charset.o .objs/Darwin-arm64-emcc/qe/buffer.o .objs/Darwin-arm64-emcc/qe/search.o .objs/Darwin-arm64-emcc/qe/input.o .objs/Darwin-arm64-emcc/qe/display.o .objs/Darwin-arm64-emcc/qe/modes/hex.o .objs/Darwin-arm64-emcc/qe/qescript.o .objs/Darwin-arm64-emcc/qe/extras.o .objs/Darwin-arm64-emcc/qe/variables.o .objs/Darwin-arm64-emcc/qe/unix.o .objs/Darwin-arm64-emcc/qe/tty.o .objs/Darwin-arm64-emcc/qe/kmap.o .objs/Darwin-arm64-emcc/qe/unicode_join.o .objs/Darwin-arm64-emcc/qe/arabic.o .objs/Darwin-arm64-emcc/qe/indic.o .objs/Darwin-arm64-emcc/qe/libunicode.o .objs/Darwin-arm64-emcc/qe/libregexp.o .objs/Darwin-arm64-emcc/qe/libquickjs/quickjs.o .objs/Darwin-arm64-emcc/qe/libquickjs/quickjs-libc.o .objs/Darwin-arm64-emcc/qe/libquickjs/libbf.o .objs/Darwin-arm64-emcc/qe/charsetjis.o .objs/Darwin-arm64-emcc/qe/charsetmore.o .objs/Darwin-arm64-emcc/qe/modes/unihex.o .objs/Darwin-arm64-emcc/qe/modes/bufed.o .objs/Darwin-arm64-emcc/qe/modes/markdown.o .objs/Darwin-arm64-emcc/qe/lang/clang.o .objs/Darwin-arm64-emcc/qe/lang/xml.o .objs/Darwin-arm64-emcc/qe/lang/htmlsrc.o .objs/Darwin-arm64-emcc/qe/lang/arm.o .objs/Darwin-arm64-emcc/qe/lang/lisp.o .objs/Darwin-arm64-emcc/qe/lang/makemode.o .objs/Darwin-arm64-emcc/qe/lang/sql.o .objs/Darwin-arm64-emcc/qe/lang/ocaml.o .objs/Darwin-arm64-emcc/qe/lang/inifile.o .objs/Darwin-arm64-emcc/qe/lang/script.o .objs/Darwin-arm64-emcc/qe/lang/rust.o .objs/Darwin-arm64-emcc/qe/lang/swift.o .objs/Darwin-arm64-emcc/qe/lang/groovy.o .objs/Darwin-arm64-emcc/qe/lang/haskell.o .objs/Darwin-arm64-emcc/qe/lang/lua.o .objs/Darwin-arm64-emcc/qe/lang/python.o .objs/Darwin-arm64-emcc/qe/lang/ruby.o .objs/Darwin-arm64-emcc/qe/lang/extra-modes.o .objs/Darwin-arm64-emcc/qe/modes/shell.o .objs/Darwin-arm64-emcc/qe/modes/dired.o .objs/Darwin-arm64-emcc/qe/modes/archive.o .objs/Darwin-arm64-emcc/qe/modes/latex-mode.o .objs/Darwin-arm64-emcc/qe/modes/stb.o .objs/Darwin-arm64-emcc/qe/qe_modules.o  -lm
+
+then libquickjs/repl.c and lips/lips-repl.c can be compiled using nodejs:
+
+- node libquickjs/qjsc.js  -N qjsc_repl -m -o libquickjs/repl.c -c libquickjs/repl.js
+- node libquickjs/qjsc.js -N qjsc_lips_repl -o lips/lips-repl.c -c lips/lips-repl.js
+
+

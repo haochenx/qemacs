@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="./xterm.css" />
+  </head>
+  <body>
+    <div style="{ width: 100% }" id="terminal"></div>
+    <script type="module">
+      import '/xterm.js';
+//      import 'https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js';
+      import '/xterm-pty/index.js';
+      import initEmscripten from './qe_g.mjs';
+
+      var xterm = new Terminal({ macOptionIsMeta: true });
+      xterm.open(document.getElementById('terminal'));
+
+      // Create master/slave objects
+      const { master, slave } = openpty();
+
+//      const fitAddon = new FitAddon.FitAddon();
+//      xterm.loadAddon(fitAddon);
+
+      // Connect the master object to xterm.js
+      xterm.loadAddon(master);
+      window['term'] = xterm;
+
+      await initEmscripten({
+        pty: slave
+      });
+      setTimeout(() => xterm.resize(120, 40), 250);
+    </script>
+  </body>
+</html>
