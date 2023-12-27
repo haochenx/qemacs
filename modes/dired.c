@@ -1476,13 +1476,13 @@ static const CmdDef dired_commands[] = {
     CMD1( "dired-previous-line", "p, C-p, up",
           "Move to the previous entry",
           dired_up_down, -1)
-    CMD0( "dired-refresh", "r",
+    CMD0( "dired-refresh", "g",
           "Refresh directory contents",
           dired_refresh)
     CMD1( "dired-toggle-dot-files", ".",
           "Display or hide entries starting with .",
           dired_toggle_dot_files, -1)
-    CMD0( "dired-parent", "^, left",
+    CMD0( "dired-parent", "^, left, U",
           "Select the parent directory",
           dired_parent)
     CMD0( "dired-toggle-human", "H",
