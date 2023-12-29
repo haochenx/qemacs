@@ -256,7 +256,17 @@ ifdef TARGET_X11
 endif
 endif	# TARGET_TINY
 
+## EXPERIMENT - camlrun-poc
+OBJS+= libcamlrun/standalone1-prims.o modes/camlrun.o
+CFLAGS+= -I/Users/hx/git/ocaml/runtime
+
 SRCS:= $(OBJS:.o=.c)
+
+## EXPERIMENT - camlrun-poc
+OBJS+= libcamlrun/standalone1.o
+LDFLAGS+= -Llibcamlrun/
+LIBS+= -lcamlrun
+
 
 DEPENDS:= qe.h config.h config.mak charset.h color.h cutils.h display.h \
 	qestyles.h unicode_join.h util.h variables.h \
@@ -372,6 +382,10 @@ $(OBJS_DIR)/$(TARGET)_modules.c: $(SRCS) Makefile config.mak
 	@grep -h ^qe_module_init $(SRCS)                    >> $@
 	@echo '#undef qe_module_init'                       >> $@
 	@echo '}'                                           >> $@
+
+$(OBJS_DIR)/libcamlrun/%.o: libcamlrun/%.o
+	$(cmd)  mkdir -p $(dir $@)
+	$(cmd) cp $< $@
 
 $(OBJS_DIR)/libquickjs/%.o: libquickjs/%.c $(wildcard libquickjs/*.h) Makefile
 	$(echo) CC $(ECHO_CFLAGS) -c $<

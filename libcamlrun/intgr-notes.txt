@@ -3,6 +3,7 @@
 
 # fun stuff
 ocamlc -nostdlib -nopervasives -output-obj -without-runtime -I ~/git/ocaml/runtime -open Stdlib -o standalone1.o stdlib.cmo standalone1.ml
+(this assumse the existance of stdlib.ml and stdlib.{cmo,cmi}, where the latter can be bulit with ocamlc -nopervasives stdlib.ml)
 
 # Gotchas
 
