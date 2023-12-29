@@ -4,6 +4,28 @@ import * as os from 'os';
 globalThis.std = std;
 globalThis.os = os;
 
+globalThis.fetch = ((url) => {
+  print("fetch: " + url);
+  return new Promise((res) => {
+    const intf = {
+      text() { return std.urlGet(url); },
+      arrayBuffer() { return std.urlGet(url, { binary: true }); },
+    }
+    res(intf)
+  });
+});
+
+const mockedRequiredModules = ({
+  http: {},
+  https: {},
+  perf_hooks: { performance: { timeOrigin: Date.now() } },
+});
+
+globalThis.require = ((str) => {
+  print("require (mocked): " + str);
+  return mockedRequiredModules[str];
+});
+
 // adopted from https://www.npmjs.com/package/text-encoding-shim
 (function (root, factory) {
     if (typeof define === "function" && define.amd) {
@@ -83,6 +105,7 @@ globalThis.os = os;
 	};
 	return {'TextEncoder': TextEncoder, 'TextDecoder': TextDecoder};
 }));
+
 
 /**@license
  *   __ __                          __
@@ -16200,6 +16223,10 @@ globalThis.os = os;
     global_env.set('self', self);
     global_env.set('window', undefined);
     global_env.set('global', undefined);
+  } else if (typeof globalThis !== "undefined") {
+    global_env.set('self', globalThis);
+    global_env.set('window', undefined);
+    global_env.set('global', globalThis);
   }
   // -------------------------------------------------------------------------
   function typeErrorMessage(fn, got, expected) {
@@ -17728,6 +17755,10 @@ var interpreter = lips.Interpreter('demo', intf);
     }
     return readline(handle_quit);
   }
+
+  // interpreter initialization
+  interpreter.set("bootstrap", lips.bootstrap);
+
   while (go && (line = await input(prompt)) !== null) {
     if (line === '\\q') {
       handle_quit();
@@ -17743,7 +17774,7 @@ var interpreter = lips.Interpreter('demo', intf);
         prompt = ". ";
       }
     } catch (e) {
-      print("err: " + e);
+      print("err: " + e + ";\n" + e.stack);
       code = "";
       prompt = "> ";
     }
