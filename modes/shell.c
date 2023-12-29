@@ -191,6 +191,7 @@ const char *get_shell(void)
 #include "quickjs-libc.h"
 
 #include "libquickjs/repl.c"
+#include "libyjs/yjs_core.c"
 
 static JSContext *JS_NewCustomContext(JSRuntime *rt)
 {
@@ -283,6 +284,7 @@ int quickjs_repl(int argc, const char **argv)
   ctx = JS_NewCustomContext(rt);
   js_std_add_helpers(ctx, argc, (char**) argv);
 
+  js_std_eval_binary(ctx, qjsc_yjs_core, qjsc_yjs_core_size, 0);
   js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
   js_std_loop(ctx);
   JS_FreeContext(ctx);
@@ -307,6 +309,7 @@ int xqcaml_repl(int argc, const char **argv)
   JS_SetPropertyStr(ctx, global, "__qjs_repl_eval_mode", mode);
   JS_FreeValue(ctx, global);
 
+  js_std_eval_binary(ctx, qjsc_yjs_core, qjsc_yjs_core_size, 0);
   js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
   js_std_loop(ctx);
   JS_FreeContext(ctx);
@@ -333,6 +336,7 @@ int lips_repl(int argc, const char **argv)
     "globalThis.os = os;\n";
   eval_buf(ctx, str, strlen(str), "<input>", JS_EVAL_TYPE_MODULE);
 
+  js_std_eval_binary(ctx, qjsc_yjs_core, qjsc_yjs_core_size, 0);
   js_std_eval_binary(ctx, qjsc_lips_repl, qjsc_lips_repl_size, 0);
   js_std_loop(ctx);
   JS_FreeContext(ctx);
