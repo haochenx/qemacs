@@ -488,6 +488,7 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
             break;
           case QUICKJS_XQCAML_REPL_SELECTED:
             xqcaml_repl(argc, argv);
+            break;
           default:
             put_status(NULL, "panic: unknown quickjs_mode: %d",
                        quickjs_mode);
