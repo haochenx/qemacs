@@ -1480,11 +1480,49 @@ static const JSCFunctionListEntry js_std_error_props[] = {
 #undef DEF
 };
 
+#include <caml/mlvalues.h>
+#include <caml/alloc.h>
+#include <caml/callback.h>
+
+static JSValue js_xqcaml_interp
+(JSContext *ctx, JSValueConst this_val,
+ int argc, JSValueConst *argv)
+{
+  CAMLparam0();
+  CAMLlocal2(camlinput, camlres);
+  JSValue ret;
+
+  const char *input;
+  size_t len;
+
+  if (argc != 1) {
+    return JS_ThrowTypeError(ctx, "js_xqcaml_interp - invalid number of arguments (must be 1)");
+  }
+
+  // TODO - we want to avoid additional copy by directly writing to caml managed memory
+  input = JS_ToCStringLen(ctx, &len, argv[0]);
+  camlinput = caml_alloc_initialized_string(len, input);
+
+  const value *f = caml_named_value("xqcaml_interp");
+  if (f != NULL) {
+    camlres = caml_callback_exn(*f, camlinput);
+    len = caml_string_length(camlres);
+    ret = JS_NewStringLen(ctx, String_val(camlres), len);
+  } else {
+    ret = JS_UNDEFINED;
+  }
+
+ done:
+  JS_FreeCString(ctx, input);
+  CAMLreturnT(JSValue, ret);
+}
+
 static const JSCFunctionListEntry js_std_funcs[] = {
     JS_CFUNC_DEF("exit", 1, js_std_exit ),
     JS_CFUNC_DEF("gc", 0, js_std_gc ),
     JS_CFUNC_DEF("evalScript", 1, js_evalScript ),
     JS_CFUNC_DEF("loadScript", 1, js_loadScript ),
+    JS_CFUNC_DEF("xqcamlInterp", 1, js_xqcaml_interp ),
     JS_CFUNC_DEF("getenv", 1, js_std_getenv ),
     JS_CFUNC_DEF("setenv", 1, js_std_setenv ),
     JS_CFUNC_DEF("unsetenv", 1, js_std_unsetenv ),

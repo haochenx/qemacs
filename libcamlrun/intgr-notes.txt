@@ -1,3 +1,5 @@
+# all based on OCaml 5.1.0 source tree (tag: 5.1.0; commit: 5717a14d0e3dc2b0e41ab94b82977d5761f70ea2)
+
 # first try (for ocamlrun, libocamlrun.a & ocamlc):
 ./configure --without-zstd --disable-unix-lib --disable-systhreads --disable-cfi --disable-native-compiler --disable-stdlib-manpages --without-odoc --disable-ocamldoc --without-afl
 

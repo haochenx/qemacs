@@ -252,7 +252,21 @@ static int eval_buf(JSContext *ctx, const void *buf, int buf_len,
     return ret;
 }
 
+extern void caml_startup(char ** argv);
+
 static void quickjs_runtime_custom_init(JSRuntime *rt) {
+  static volatile int caml_initialized = 0;
+  static volatile int caml_initialization_finished = 0;
+  static char *caml_argv[] = { 0 };
+
+  if (!caml_initialized) {
+    caml_initialized = 1;
+    caml_startup(caml_argv); // we probably want to do this lazily
+    caml_initialization_finished = 1;
+  } else {
+    while (!caml_initialization_finished);
+  }
+
   JS_SetMemoryLimit(rt, (size_t) 1024 * 1024 * 1024 * 4 /* 4G */);
   JS_SetMaxStackSize(rt, (size_t) 1024 * 1024 * 1024 * 2 /* 2G */);
 }
@@ -261,12 +275,37 @@ int quickjs_repl(int argc, const char **argv)
 {
   JSRuntime *rt;
   JSContext *ctx;
+
   rt = JS_NewRuntime();
   quickjs_runtime_custom_init(rt);
   js_std_set_worker_new_context_func(JS_NewCustomContext);
   js_std_init_handlers(rt);
   ctx = JS_NewCustomContext(rt);
   js_std_add_helpers(ctx, argc, (char**) argv);
+
+  js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
+  js_std_loop(ctx);
+  JS_FreeContext(ctx);
+  JS_FreeRuntime(rt);
+  return 0;
+}
+
+int xqcaml_repl(int argc, const char **argv)
+{
+  JSRuntime *rt;
+  JSContext *ctx;
+
+  rt = JS_NewRuntime();
+  quickjs_runtime_custom_init(rt);
+  js_std_set_worker_new_context_func(JS_NewCustomContext);
+  js_std_init_handlers(rt);
+  ctx = JS_NewCustomContext(rt);
+  js_std_add_helpers(ctx, argc, (char**) argv);
+
+  JSValue global = JS_GetGlobalObject(ctx);
+  JSValue mode = JS_NewString(ctx, "xqcaml");
+  JS_SetPropertyStr(ctx, global, "__qjs_repl_eval_mode", mode);
+  JS_FreeValue(ctx, global);
 
   js_std_eval_binary(ctx, qjsc_repl, qjsc_repl_size, 0);
   js_std_loop(ctx);
@@ -306,6 +345,7 @@ enum QuickJS_MODE {
   NO_QUICKJS_SELECTED = 0,
   QUICKJS_REPL_SELECTED,
   QUICKJS_LIPS_REPL_SELECTED,
+  QUICKJS_XQCAML_REPL_SELECTED,
 };
 
 #endif /* CONFIG_QUICKJS */
@@ -363,6 +403,11 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
           } else if (!strcmp(cmd, "*lips*")) {
             quickjs_mode = QUICKJS_LIPS_REPL_SELECTED;
             argv[argc++] = "lips.xq";
+            argv[argc] = NULL;
+            goto argv_ready;
+          } else if (!strcmp(cmd, "*xqcaml*")) {
+            quickjs_mode = QUICKJS_XQCAML_REPL_SELECTED;
+            argv[argc++] = "xqcaml";
             argv[argc] = NULL;
             goto argv_ready;
           }
@@ -441,6 +486,8 @@ static int run_process(const char *cmd, int *fd_ptr, int *pid_ptr,
           case QUICKJS_LIPS_REPL_SELECTED:
             lips_repl(argc, argv);
             break;
+          case QUICKJS_XQCAML_REPL_SELECTED:
+            xqcaml_repl(argc, argv);
           default:
             put_status(NULL, "panic: unknown quickjs_mode: %d",
                        quickjs_mode);
@@ -2961,6 +3008,66 @@ static void do_lips_repl(EditState *e) {
 }
 #endif /* CONFIG_LIPS */
 
+#if 1 /* #ifdef CONFIG_XQCAML */
+static void do_xqcaml_repl(EditState *e) {
+    char curpath[MAX_FILENAME_SIZE];
+    EditBuffer *b = NULL;
+
+    /* Start the shell in the default directory of the current window */
+    get_default_path(e->b, e->offset, curpath, sizeof curpath);
+
+    /* avoid messing with the dired pane */
+    e = qe_find_target_window(e, 1);
+
+    /* find shell buffer if any */
+    if (1) {
+        if (strstart(e->b->name, "*xqcaml", NULL)) {
+            /* If the current buffer is a shell buffer, use it */
+            b = e->b;
+        } else {
+            /* Find the last used shell buffer, if any */
+            if (strstart(error_buffer, "*xqcaml", NULL)) {
+                b = try_show_buffer(&e, error_buffer);
+            }
+            if (b == NULL) {
+                b = try_show_buffer(&e, "*xqcaml-repl*");
+            }
+        }
+        if (b) {
+            /* If the process is active, switch to interactive mode */
+            ShellState *s = shell_get_state(e, 0);
+            if (s && s->pid >= 0) {
+                e->offset = b->total_size;
+                if ((s->shell_flags & SF_INTERACTIVE) && !s->grab_keys) {
+                    e->offset = s->cur_offset;
+                    e->interactive = 1;
+                }
+                return;
+            }
+            /* otherwise, restart the process here */
+            e->offset = b->total_size;
+            /* restart the shell in the same directory */
+            get_default_path(e->b, e->offset, curpath, sizeof curpath);
+        }
+    }
+
+    /* create new shell buffer or restart shell in current buffer */
+    b = new_shell_buffer(b, e, "*xqcaml-repl*", "REPL xqcaml", curpath, "*xqcaml*",
+                         SF_COLOR | SF_INTERACTIVE);
+    if (!b)
+        return;
+
+    b->default_mode = &shell_mode;
+    switch_to_buffer(e, b);
+    /* force interactive mode if restarting */
+    shell_mode.mode_init(e, b, 0);
+    // XXX: should update the terminal size and notify the process
+    //do_shell_refresh(e, 0);
+    set_error_offset(b, 0);
+    put_status(e, "Press C-o to toggle between repl/edit mode");
+}
+#endif /* CONFIG_XQCAML */
+
 static void do_man(EditState *s, const char *arg)
 {
     char bufname[32];
@@ -3936,6 +4043,11 @@ static const CmdDef shell_global_commands[] = {
           "Start a LIPS REPL",
           do_lips_repl)
 #endif /* CONFIG_LIPS */
+#if 1 /* #ifdef CONFIG_XQCAML */
+    CMD0( "xqcaml-repl", "M-C-g c",
+          "Start a xqcaml REPL",
+          do_xqcaml_repl)
+#endif /* CONFIG_XQCAML */
     CMD2( "ssh", "",
           "Start a shell buffer with a new remote shell connection",
           do_ssh, ESs,
@@ -4008,6 +4120,27 @@ static const char * const pager_bindings[] = {
 
 static int shell_init(void)
 {
+    QEmacsState *qs = &qe_state;
+    int argidx = 0;
+    char **arg = qs->argv;
+
+    while (argidx < qs->argc) {
+      if (!strcmp(*arg, "--as-quickjs-repl")) {
+        quickjs_repl(qs->argc - (argidx + 1), (const char **)(arg+1));
+      } else if (!strcmp(*arg, "--as-lips-repl")) {
+        lips_repl(qs->argc - (argidx + 1), (const char **)(arg+1));
+      } else if (!strcmp(*arg, "--as-xqcaml-repl")) {
+        xqcaml_repl(qs->argc - (argidx + 1), (const char **)(arg+1));
+      } else {
+        goto next;
+      };
+    exit:
+      exit(0);
+    next:
+      ++argidx;
+      ++arg;
+    }
+
     /* populate and register shell mode and commands */
     // XXX: remove this mess: should just inherit with fallback
     memcpy(&shell_mode, &text_mode, offsetof(ModeDef, first_key));

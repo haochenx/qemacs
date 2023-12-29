@@ -22,16 +22,15 @@ void do_camlrun_test(EditState *s) {
 
 
 static const CmdDef camlrun_commands[] = {
-  CMD0("camlrun_test", "M-C-g c", "camlrun test",
-       do_camlrun_test)
+  /* CMD0("camlrun_test", "M-C-g c", "camlrun test", */
+  /*      do_camlrun_test) */
 };
 
 static int camlrun_init(void) {
-  char_os *argv[] = {
-    "qe.camlrun",
+  static char_os *caml_argv[] = {
     0,
   };
-  caml_startup(argv); // we probably want to do this lazily
+  caml_startup(caml_argv); // we probably want to do this lazily
 
   qe_register_commands(NULL, camlrun_commands, countof(camlrun_commands));
   return 0;

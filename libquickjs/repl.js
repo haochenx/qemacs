@@ -904,6 +904,14 @@ import * as os from "os";
     var hex_mode = false;
     var eval_mode = "std";
 
+    function handle_eval_mode_switch() {
+      if (eval_mode === "xqcaml") {
+        ps1 = "xc > ";
+      } else {
+        ps1 = "qjs > ";
+      }
+    }
+
     function number_to_string(a, radix) {
         var s;
         if (!isFinite(a)) {
@@ -1158,8 +1166,9 @@ import * as os from "os";
             param = expr.substring(cmd.length + 1).trim();
             if (param === "") {
                 std.puts("Running mode=" + eval_mode + "\n");
-            } else if (param === "std" || param === "math") {
+            } else if (param === "std" || param === "math" || param === "xqcaml") {
                 eval_mode = param;
+                handle_eval_mode_switch();
             } else {
                 std.puts("Invalid mode\n");
             }
@@ -1216,7 +1225,7 @@ import * as os from "os";
             std.puts("\\p [m [e]]  set the BigFloat precision to 'm' bits\n" +
                      "\\digits n   set the BigFloat precision to 'ceil(n*log2(10))' bits\n");
             if (!has_jscalc) {
-                std.puts("\\mode [std|math] change the running mode (current = " + eval_mode + ")\n");
+                std.puts("\\mode [std|math|xqcaml] change the running mode (current = " + eval_mode + ")\n");
             }
         }
         if (!config_numcalc) {
@@ -1226,13 +1235,20 @@ import * as os from "os";
 
     function eval_and_print(expr) {
         var result;
+        var now;
         
         try {
+
+          if (eval_mode === "xqcaml") {
+            result = std.xqcamlInterp(expr);
+          } else {
             if (eval_mode === "math")
-                expr = '"use math"; void 0;' + expr;
-            var now = (new Date).getTime();
+              expr = '"use math"; void 0;' + expr;
+            now = (new Date).getTime();
             /* eval as a script */
             result = std.evalScript(expr, { backtrace_barrier: true });
+          }
+
             eval_time = (new Date).getTime() - now;
             std.puts(colors[styles.result]);
             print(result);
@@ -1256,11 +1272,21 @@ import * as os from "os";
     }
 
     function cmd_start() {
+      if (typeof g.__qjs_repl_eval_mode === "string") {
+        eval_mode = g.__qjs_repl_eval_mode;
+        delete g.__qjs_repl_eval_mode;
+      }
+      handle_eval_mode_switch();
+
         if (!config_numcalc) {
+          if (eval_mode === "std" || eval_mode === "math") {
             if (has_jscalc)
                 std.puts('QJSCalc - Type "\\h" for help\n');
             else
                 std.puts('QuickJS - Type "\\h" for help\n');
+          } else if (eval_mode === "xqcaml") {
+            std.puts('xqcaml - Type "\\h" for help\n');
+          }
         }
         if (has_bignum) {
             log2_10 = Math.log(10) / Math.log(2);

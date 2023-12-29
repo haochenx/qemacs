@@ -18,6 +18,21 @@ let (|>) x f = f x
 
 external (+) : int -> int -> int = "%addint"
 
+external string_length : string -> int = "%string_length"
+external bytes_length : bytes -> int = "%bytes_length"
+external bytes_create : int -> bytes = "caml_create_bytes"
+external string_blit : string -> int -> bytes -> int -> int -> unit
+                     = "caml_blit_string" [@@noalloc]
+external bytes_blit : bytes -> int -> bytes -> int -> int -> unit
+                        = "caml_blit_bytes" [@@noalloc]
+external bytes_unsafe_to_string : bytes -> string = "%bytes_to_string"
+let ( ^ ) s1 s2 =
+  let l1 = string_length s1 and l2 = string_length s2 in
+  let s = bytes_create (l1 + l2) in
+  string_blit s1 0 s 0 l1;
+  string_blit s2 0 s l1 l2;
+  bytes_unsafe_to_string s
+
 external not : bool -> bool = "%boolnot"
 external ( && ) : bool -> bool -> bool = "%sequand"
 external ( || ) : bool -> bool -> bool = "%sequor"
