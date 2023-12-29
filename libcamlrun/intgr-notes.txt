@@ -1,0 +1,11 @@
+# first try (for ocamlrun, libocamlrun.a & ocamlc):
+./configure --without-zstd --disable-unix-lib --disable-systhreads --disable-cfi --disable-native-compiler --disable-stdlib-manpages --without-odoc --disable-ocamldoc --without-afl
+
+# fun stuff
+ocamlc -nostdlib -nopervasives -output-obj -without-runtime -I ~/git/ocaml/runtime -open Stdlib -o standalone1.o stdlib.cmo standalone1.ml
+
+# Gotchas
+
+- somehow `-nopervasives` is not in the man page of ocamlc but its useful with `-nostdlib`
+  ref: val:initial_env in compmisc.ml 
+
