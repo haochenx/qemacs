@@ -260,6 +260,11 @@ endif	# TARGET_TINY
 OBJS+= libcamlrun/standalone1-prims.o modes/camlrun.o
 CFLAGS+= -I/Users/hx/git/ocaml/runtime
 
+## clipboard support
+ifdef CONFIG_DARWIN
+  OBJS += clipboard.o
+endif
+
 SRCS:= $(OBJS:.o=.c)
 
 ## EXPERIMENT - camlrun-poc
@@ -267,6 +272,11 @@ OBJS+= libcamlrun/standalone1.o
 LDFLAGS+= -Llibcamlrun/
 LIBS+= -lcamlrun
 
+ifdef CONFIG_DARWIN
+  DEPENDS += darwin/clipboard.h
+  OBJS += darwin/clipboard.o
+  LDFLAGS += -framework Foundation -framework AppKit
+endif
 
 DEPENDS:= qe.h config.h config.mak charset.h color.h cutils.h display.h \
 	qestyles.h unicode_join.h util.h variables.h \
@@ -384,8 +394,14 @@ $(OBJS_DIR)/$(TARGET)_modules.c: $(SRCS) Makefile config.mak
 	@echo '}'                                           >> $@
 
 $(OBJS_DIR)/libcamlrun/%.o: libcamlrun/%.o
+	$(echo) CP $@
 	$(cmd)  mkdir -p $(dir $@)
 	$(cmd) cp $< $@
+
+$(OBJS_DIR)/darwin/%.o: darwin/%.mm
+	$(echo) CC $(ECHO_CFLAGS) -c $<
+	$(cmd)  mkdir -p $(dir $@)
+	$(cmd) $(CC) -c -o $@ $(filter-out -I$(DEPTH),$(CFLAGS)) $<
 
 $(OBJS_DIR)/libquickjs/%.o: libquickjs/%.c $(wildcard libquickjs/*.h) Makefile
 	$(echo) CC $(ECHO_CFLAGS) -c $<
