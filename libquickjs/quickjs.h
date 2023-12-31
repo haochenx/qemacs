@@ -88,7 +88,9 @@ enum {
 };
 
 typedef struct JSRefCountHeader {
+#if USE_REFCOUNT
     int ref_count;
+#endif
 } JSRefCountHeader;
 
 #define JS_FLOAT64_NAN NAN
@@ -642,39 +644,47 @@ JSValue JS_ThrowOutOfMemory(JSContext *ctx);
 void __JS_FreeValue(JSContext *ctx, JSValue v);
 static inline void JS_FreeValue(JSContext *ctx, JSValue v)
 {
+#if USE_REFCOUNT_WIP
     if (JS_VALUE_HAS_REF_COUNT(v)) {
         JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(v);
         if (--p->ref_count <= 0) {
             __JS_FreeValue(ctx, v);
         }
     }
+#endif
 }
 void __JS_FreeValueRT(JSRuntime *rt, JSValue v);
 static inline void JS_FreeValueRT(JSRuntime *rt, JSValue v)
 {
+#if USE_REFCOUNT_WIP
     if (JS_VALUE_HAS_REF_COUNT(v)) {
         JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(v);
         if (--p->ref_count <= 0) {
             __JS_FreeValueRT(rt, v);
         }
     }
+#endif
 }
 
 static inline JSValue JS_DupValue(JSContext *ctx, JSValueConst v)
 {
+#if USE_REFCOUNT_WIP
     if (JS_VALUE_HAS_REF_COUNT(v)) {
         JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(v);
         p->ref_count++;
     }
+#endif
     return (JSValue)v;
 }
 
 static inline JSValue JS_DupValueRT(JSRuntime *rt, JSValueConst v)
 {
+#if USE_REFCOUNT_WIP
     if (JS_VALUE_HAS_REF_COUNT(v)) {
         JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(v);
         p->ref_count++;
     }
+#endif
     return (JSValue)v;
 }
 
