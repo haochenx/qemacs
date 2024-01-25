@@ -95,7 +95,17 @@ typedef struct JSRefCountHeader {
 
 #define JS_FLOAT64_NAN NAN
 
-#ifdef CONFIG_CHECK_JSVALUE
+#if 1 /* FIXME: make it configurable */ && defined(JS_PTR64)
+#define USE_OCAML_GC 1
+#endif
+
+#if USE_OCAML_GC
+
+#endif
+
+#include <caml/memory.h>
+
+#elif defined(CONFIG_CHECK_JSVALUE)
 /* JSValue consistency : it is not possible to run the code in this
    mode, but it is useful to detect simple reference counting
    errors. It would be interesting to modify a static C analyzer to
